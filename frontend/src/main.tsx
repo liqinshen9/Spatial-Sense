@@ -8,3 +8,7 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 )
+
+//The React app starts when running Vite (npm run dev). Vite opens a local web page at localhost:5173
+//That page loads the React code from main.tsx, which mounts the main component - App.tsx
+
