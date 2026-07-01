@@ -12,4 +12,5 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<ScoreEntry> Scores => Set<ScoreEntry>();
+    public DbSet<User> Users => Set<User>();
 }

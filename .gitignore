@@ -36,3 +36,7 @@ lerna-debug.log*
 .idea/
 .DS_Store
 *.sw?
+
+# Local .NET settings
+**/appsettings.Development.json
+**/appsettings.Local.json
