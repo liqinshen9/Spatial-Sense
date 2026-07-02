@@ -1,34 +1,67 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { VolumeNotice, SunOne, Moon } from "@icon-park/react";
 
 function App() {
-  //useState returns the current state value and a function to update it
-  const [message, setMessage] = useState("Loading...");//start with message = "Loading", then give a function called setMessage to change it later
-  const [error, setError] = useState("");
-
-  //here React runs a useEffect hook that sends a fetch request to the backend endpoint http://localhost:5000/api/message
-  useEffect(() => {
-    fetch("http://localhost:5000/api/message")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Backend request failed");
-        }
-
-        return response.json();
-      })
-      .then((data) => {
-        setMessage(data.message);
-      })
-      .catch(() => {
-        setError("Could not connect to backend. Make sure the backend is running.");
-      });
-  }, []);
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   return (
-    //min-h-screen: make the dark title area at least the full screen height
-    <main className="min-h-screen bg-slate-950 p-6 text-slate-100">
-      <h1 className="text-xl font-semibold">Spatial Sense</h1>
-      {/*If error has value, show the error message in red. Otherwise, show normal message.*/}
-      {error ? (<p className="text-red-400">{error}</p>) : (<p className="text-slate-200">{message}</p>)}
+    <main
+      className={`app-shell relative min-h-screen overflow-hidden transition-colors duration-300 ${
+        isDarkMode ? "" : "theme-light"
+      } bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]`}
+    >
+      {/* navbar */}
+      <nav
+        className="relative z-10 flex h-14 items-center justify-between border-b border-[var(--color-nav-border)] bg-[var(--color-nav-bg)] px-12 backdrop-blur-sm transition-colors duration-300"
+      >
+        <div className="flex h-full items-center gap-8">
+          <button
+            className="transition hover:text-[var(--color-emphasis)]"
+            aria-label="Sound"
+          >
+            <VolumeNotice theme="outline" size="24" fill="currentColor" />
+          </button>
+
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className="transition text-[var(--color-emphasis)]"
+            aria-label="Toggle theme"
+          >
+            {isDarkMode ? (
+              <Moon theme="outline" size="24" fill="currentColor" />
+            ) : (
+              <SunOne theme="outline" size="24" fill="currentColor" />
+            )}
+          </button>
+
+          <a href="#" className="text-sm font-bold text-[var(--color-emphasis)]">
+            Home
+          </a>
+
+          <a
+            href="#"
+            className="text-sm font-bold transition hover:text-[var(--color-emphasis)]"
+          >
+            Leaderboard
+          </a>
+        </div>
+
+        <button
+          className="rounded-md bg-[var(--color-emphasis)] px-5 py-2 text-sm font-bold text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)]"
+        >
+          Login
+        </button>
+      </nav>
+
+      {/* hero */}
+      <section className="relative z-10 min-h-[calc(100vh-56px)]">
+        <div className="absolute left-[7%] top-[14%]">
+          <h1 className="select-none font-['Major_Mono_Display'] text-[7.2rem] uppercase leading-[0.85] tracking-[0.03em] md:text-[8rem]">
+            <span className="block">Spatial</span>
+            <span className="block">Sense</span>
+          </h1>
+        </div>
+      </section>
     </main>
   );
 }
