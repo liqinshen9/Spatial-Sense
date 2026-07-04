@@ -2,11 +2,29 @@ import { VolumeNotice, SunOne, Moon } from "@icon-park/react";
 
 type NavbarProps = {
   isDarkMode: boolean;
+  activePage: "home" | "game" | "leaderboard";
   onToggleTheme: () => void;
   onGoHome: () => void;
+  onGoLeaderboard: () => void;
 };
 
-function Navbar({ isDarkMode, onToggleTheme, onGoHome }: NavbarProps) {
+function Navbar({
+  isDarkMode,
+  activePage,
+  onToggleTheme,
+  onGoHome,
+  onGoLeaderboard,
+}: NavbarProps) {
+  const homeClass =
+    activePage === "home"
+      ? "rounded-full bg-[var(--color-active-bg)] px-5 py-2 text-sm font-bold text-[var(--color-emphasis)] shadow-[var(--active-shadow)]"
+      : "px-5 py-2 text-sm font-bold transition hover:text-[var(--color-emphasis)]";
+
+  const leaderboardClass =
+    activePage === "leaderboard"
+      ? "rounded-full bg-[var(--color-active-bg)] px-5 py-2 text-sm font-bold text-[var(--color-emphasis)] shadow-[var(--active-shadow)]"
+      : "px-5 py-2 text-sm font-bold transition hover:text-[var(--color-emphasis)]";
+
   return (
     <nav className="relative z-10 flex h-14 items-center justify-between border-b border-[var(--color-nav-border)] bg-[var(--color-nav-bg)] px-12 shadow-[var(--nav-shadow)] backdrop-blur-md transition-colors duration-300">
       <div className="flex h-full items-center gap-8">
@@ -31,23 +49,17 @@ function Navbar({ isDarkMode, onToggleTheme, onGoHome }: NavbarProps) {
           )}
         </button>
 
-        <a
-          href="#"
-          className="rounded-full bg-[var(--color-active-bg)] px-5 py-2 text-sm font-bold text-[var(--color-emphasis)] shadow-[var(--active-shadow)]"
-          onClick={(e) => {
-            e.preventDefault();
-            onGoHome();
-          }}
-        >
+        <button type="button" onClick={onGoHome} className={homeClass}>
           Home
-        </a>
+        </button>
 
-        <a
-          href="#"
-          className="text-sm font-bold transition hover:text-[var(--color-emphasis)]"
+        <button
+          type="button"
+          onClick={onGoLeaderboard}
+          className={leaderboardClass}
         >
           Leaderboard
-        </a>
+        </button>
       </div>
 
       <button

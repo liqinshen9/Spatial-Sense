@@ -19,6 +19,10 @@
   --active-shadow: none;
   --button-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
   --slider-shadow: none;
+
+  --color-leaderboard-card: rgba(255, 255, 255, 0.08);
+  --color-leaderboard-row: rgba(255, 255, 255, 0.08);
+  --leaderboard-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
 }
 
 .app-shell.theme-light {
@@ -37,6 +41,9 @@
   --active-shadow: 0 8px 20px rgba(0, 212, 255, 0.14);
   --button-shadow: 0 12px 28px rgba(0, 212, 255, 0.32);
   --slider-shadow: 0 8px 22px rgba(0, 47, 165, 0.12);
+  --color-leaderboard-card: rgba(255, 255, 255, 0.78);
+  --color-leaderboard-row: rgba(0, 212, 255, 0.08);
+  --leaderboard-shadow: 0 18px 40px rgba(0, 47, 165, 0.1);
 }
 
 .app-shell.theme-light::before {

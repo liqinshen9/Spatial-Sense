@@ -2,12 +2,15 @@ import { useState } from "react";
 import Navbar from "./components/Navbar";
 import HeroSection from "./components/HeroSection";
 import GamePage from "./components/GamePage";
+import LeaderboardPage from "./components/Leaderboard";
+
+type Page = "home" | "game" | "leaderboard";
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [difficultyIndex, setDifficultyIndex] = useState(0);
   //create a state called currentPage to record what page the user is on, with "home" as the default value
-  const [currentPage, setCurrentPage] = useState<"home" | "game">("home");
+  const [currentPage, setCurrentPage] = useState<"home" | "game" | "leaderboard">("home");
 
   return (
     <main
@@ -16,21 +19,23 @@ function App() {
       } bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]`}
     >
       <Navbar
-        isDarkMode={isDarkMode}
-        onToggleTheme={() => setIsDarkMode((prev) => !prev)}
-        onGoHome={() => setCurrentPage("home")}
-      />
+      isDarkMode={isDarkMode}
+      activePage={currentPage}
+      onToggleTheme={() => setIsDarkMode((prev) => !prev)}
+      onGoHome={() => setCurrentPage("home")}
+      onGoLeaderboard={() => setCurrentPage("leaderboard")}
+    />
       
       {/*when user clicks start game, set currentPage to "game" and React will re-render, user will go to game page*/}
-      {currentPage === "home" ? (
+      {currentPage === "home" && (
         <HeroSection
           difficultyIndex={difficultyIndex}
           onDifficultyChange={setDifficultyIndex}
           onStartGame={() => setCurrentPage("game")}
         />
-      ) : (
-        <GamePage difficultyIndex={difficultyIndex} />
       )}
+      {currentPage === "game" && <GamePage difficultyIndex={difficultyIndex} />}
+      {currentPage === "leaderboard" && <LeaderboardPage />}
     </main>
   );
 }
