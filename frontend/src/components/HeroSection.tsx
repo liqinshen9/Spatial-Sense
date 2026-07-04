@@ -1,4 +1,5 @@
 import DifficultySelector from "./DifficultySelector";
+import HomeBlocks from "./HomeBlocks";
 
 type HeroSectionProps = {
   difficultyIndex: number;
@@ -13,7 +14,8 @@ function HeroSection({
 }: HeroSectionProps) {
   return (
     <section className="relative z-10 min-h-[calc(100vh-56px)]">
-      <div className="absolute left-[7%] top-[14%]">
+      <HomeBlocks />
+      <div className="absolute left-[7%] top-[14%] z-10">
         <h1 className="select-none font-['Major_Mono_Display'] text-[7.2rem] uppercase leading-[0.85] tracking-[0.03em] md:text-[8rem]">
           <span className="block">Spatial</span>
           <span className="block">
