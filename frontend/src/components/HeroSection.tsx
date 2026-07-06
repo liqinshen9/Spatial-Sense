@@ -29,7 +29,7 @@ function HeroSection({
           <button
             type="button"
             onClick={onStartGame}
-            className="rounded-xl bg-[var(--color-emphasis)] px-8 py-4 text-lg font-black text-[var(--color-emphasis-contrast)] shadow-[var(--button-shadow)] transition hover:-translate-y-1 hover:bg-[var(--color-emphasis-hover)]"
+            className="rounded-xl bg-[var(--color-emphasis)] px-8 py-4 text-lg font-black text-[var(--color-emphasis-contrast)] transition hover:-translate-y-1 hover:bg-[var(--color-emphasis-hover)]"
           >
             Start Game
           </button>

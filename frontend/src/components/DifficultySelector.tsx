@@ -51,7 +51,7 @@ function DifficultySelector({
       </p>
 
       <div className="flex items-center gap-5">
-        <div className="relative h-8 w-[190px] rounded-full border-2 border-[var(--color-text-primary)] bg-[var(--color-slider-bg)] shadow-[var(--slider-shadow)]">
+        <div className="relative h-8 w-[190px] rounded-full border-2 border-[var(--color-text-primary)] bg-[var(--color-slider-bg)]">
           <input
             type="range"
             min="0"
@@ -70,7 +70,7 @@ function DifficultySelector({
           </div>
 
           <div
-            className="absolute left-1 top-1 z-10 h-6 w-6 rounded-full bg-[var(--color-emphasis)] shadow-[var(--button-shadow)] transition-transform duration-300"
+            className="absolute left-1 top-1 z-10 h-6 w-6 rounded-full bg-[var(--color-emphasis)] transition-transform duration-300"
             style={{
               transform: `translateX(${difficultyIndex * 78}px)`,
             }}

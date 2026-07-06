@@ -48,7 +48,7 @@ function LeaderboardPage() {
       <div className="mx-auto max-w-5xl">
 
         {/* difficulty control */}
-        <div className="mb-8 flex w-fit rounded-2xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] p-2 shadow-[var(--leaderboard-shadow)] backdrop-blur-md">
+        <div className="mb-8 flex w-fit rounded-2xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] p-2 backdrop-blur-md">
           {difficultyOptions.map((difficulty) => {
             const isActive = selectedDifficulty === difficulty.value;
 
@@ -59,7 +59,7 @@ function LeaderboardPage() {
                 onClick={() => setSelectedDifficulty(difficulty.value)}
                 className={`rounded-xl px-8 py-3 text-sm font-black uppercase tracking-[0.18em] transition ${
                   isActive
-                    ? "bg-[var(--color-emphasis)] text-[var(--color-emphasis-contrast)] shadow-[var(--button-shadow)]"
+                    ? "bg-[var(--color-emphasis)] text-[var(--color-emphasis-contrast)]"
                     : "text-[var(--color-text-primary)] opacity-70 hover:opacity-100"
                 }`}
               >
@@ -70,7 +70,7 @@ function LeaderboardPage() {
         </div>
 
         {/* ranking table */}
-        <div className="overflow-hidden rounded-3xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] shadow-[var(--leaderboard-shadow)] backdrop-blur-md">
+        <div className="overflow-hidden rounded-3xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] backdrop-blur-md">
           <div className="grid grid-cols-[100px_1fr_180px] border-b border-[var(--color-nav-border)] px-8 py-5 text-sm font-black uppercase tracking-[0.2em] opacity-70">
             <p>Rank</p>
             <p>Username</p>
