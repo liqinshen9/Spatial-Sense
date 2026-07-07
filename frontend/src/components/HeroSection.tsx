@@ -1,17 +1,17 @@
+import { useNavigate } from "react-router-dom";
 import DifficultySelector from "./DifficultySelector";
 import HomeBlocks from "./HomeBlocks";
 
 type HeroSectionProps = {
   difficultyIndex: number;
   onDifficultyChange: (nextDifficulty: number) => void;
-  onStartGame: () => void;
 };
 
 function HeroSection({
   difficultyIndex,
   onDifficultyChange,
-  onStartGame,
 }: HeroSectionProps) {
+  const navigate = useNavigate();
   return (
     <section className="relative z-10 min-h-[calc(100vh-56px)]">
       <HomeBlocks />
@@ -28,8 +28,8 @@ function HeroSection({
         <div className="mt-8 flex items-end gap-6">
           <button
             type="button"
-            onClick={onStartGame}
-            className="rounded-xl bg-[var(--color-emphasis)] px-8 py-4 text-lg font-black text-[var(--color-emphasis-contrast)] transition hover:-translate-y-1 hover:bg-[var(--color-emphasis-hover)]"
+            onClick={() => navigate("/game")}
+            className="rounded-xl bg-[var(--color-emphasis)] px-8 py-4 text-lg font-black text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)]"
           >
             Start Game
           </button>
