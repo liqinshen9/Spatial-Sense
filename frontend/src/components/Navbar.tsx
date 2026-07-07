@@ -64,7 +64,7 @@ function Navbar({
 
       <button
         type="button"
-        className="rounded-lg bg-[var(--color-emphasis)] px-6 py-2 text-sm font-bold text-[var(--color-emphasis-contrast)]  transition hover:-translate-y-0.5 hover:bg-[var(--color-emphasis-hover)]"
+        className="rounded-lg bg-[var(--color-emphasis)] px-6 py-2 text-sm font-bold text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)]"
       >
         Login
       </button>

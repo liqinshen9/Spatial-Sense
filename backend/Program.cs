@@ -1,6 +1,7 @@
 using Backend.Data;
 using Backend.Models;
 using Microsoft.EntityFrameworkCore;
+using Backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,9 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
+
+builder.Services.AddControllers();
+builder.Services.AddSingleton<PuzzleService>();
 
 var app = builder.Build();
 
@@ -92,6 +96,36 @@ app.MapDelete("/api/users/{id}", async (int id, AppDbContext db) =>
     await db.SaveChangesAsync();
 
     return Results.NoContent();
+});
+
+app.MapControllers();
+
+app.MapGet("/api/puzzles", (PuzzleService puzzleService) =>
+{
+    return Results.Ok(puzzleService.GetAll());
+});
+
+app.MapGet("/api/puzzles/random", (string? difficulty, PuzzleService puzzleService) =>
+{
+    var selectedDifficulty = string.IsNullOrWhiteSpace(difficulty)
+        ? "Easy"
+        : difficulty;
+
+    var puzzle = puzzleService.GetRandom(selectedDifficulty);
+
+    return Results.Ok(puzzle);
+});
+
+app.MapGet("/api/puzzles/{id:int}", (int id, PuzzleService puzzleService) =>
+{
+    var puzzle = puzzleService.GetById(id);
+
+    if (puzzle == null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(puzzle);
 });
 
 
