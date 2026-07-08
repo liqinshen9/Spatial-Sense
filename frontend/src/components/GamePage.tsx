@@ -27,11 +27,12 @@ const axisVectors: Record<Axis, Vector3> = {
   Z: new Vector3(0, 0, 1),
 };
 
-function formatTime(totalSeconds: number) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
+function formatTime(totalMilliseconds: number) {
+  const minutes = Math.floor(totalMilliseconds / 60000);
+  const seconds = Math.floor((totalMilliseconds % 60000) / 1000);
+  const milliseconds = totalMilliseconds % 1000;
 
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2,"0")}`;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2,"0")}:${String(milliseconds).padStart(3, "0")}`;
 }
 
 function orientationToQuaternion(orientation: BlockOrientation) {
@@ -183,7 +184,8 @@ function ProgressGrid({
 function GamePage({ difficultyIndex }: GamePageProps) {
   const difficultyName = difficultyNames[difficultyIndex] ?? "Easy";
 
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [elapsedMilliseconds, setElapsedMilliseconds] = useState(0);
+  const timerStartRef = useRef(performance.now());
   const [selectedRotationStep, setSelectedRotationStep] =
     useState<RotationStep>(90);
   const [currentProgressStep, setCurrentProgressStep] = useState(1);
@@ -242,19 +244,23 @@ function GamePage({ difficultyIndex }: GamePageProps) {
   }, [difficultyName]);
 
   useEffect(() => {
-    setElapsedSeconds(0);
+    timerStartRef.current = performance.now();
+    setElapsedMilliseconds(0);
     setCurrentProgressStep(1);
     setIsGameComplete(false);
     loadPuzzle();
   }, [loadPuzzle]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1);
-    }, 1000);
+  timerStartRef.current = performance.now();
 
-    return () => window.clearInterval(timer);
-  }, []);
+  const timer = window.setInterval(() => {
+    const elapsed = Math.floor(performance.now() - timerStartRef.current);
+    setElapsedMilliseconds(elapsed);
+  }, 10);
+
+  return () => window.clearInterval(timer);
+}, []);
 
   useEffect(() => {
     return () => {
@@ -319,7 +325,8 @@ function GamePage({ difficultyIndex }: GamePageProps) {
       solveTimeoutRef.current = null;
     }
 
-    setElapsedSeconds(0);
+    timerStartRef.current = performance.now();
+    setElapsedMilliseconds(0);
     setSelectedRotationStep(90);
     setBlockOrientation(identityOrientation);
     setIsSolved(false);
@@ -462,7 +469,7 @@ function GamePage({ difficultyIndex }: GamePageProps) {
             </p>
 
             <p className="mt-4 text-4xl font-black text-[var(--color-text-primary)]">
-              {formatTime(elapsedSeconds)}
+              {formatTime(elapsedMilliseconds)}
             </p>
           </div>
 

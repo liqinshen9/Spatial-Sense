@@ -40,7 +40,7 @@ function DifficultySelector({
   return (
     <div
       key={shakeKey}
-      className="flex flex-col gap-2"
+      className="flex w-full flex-col gap-2 sm:w-auto"
       style={{
         animation:
           shakeKey > 0 ? "difficulty-shake 0.35s ease-in-out" : "none",
@@ -50,8 +50,8 @@ function DifficultySelector({
         Select difficulty
       </p>
 
-      <div className="flex items-center gap-5">
-        <div className="relative h-8 w-[190px] rounded-full border-2 border-[var(--color-text-primary)] bg-[var(--color-slider-bg)]">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
+        <div className="relative h-8 w-[195px] rounded-full border-2 border-[var(--color-text-primary)] bg-[var(--color-slider-bg)] sm:w-[190px]">
           <input
             type="range"
             min="0"
@@ -72,13 +72,13 @@ function DifficultySelector({
           <div
             className="absolute left-1 top-1 z-10 h-6 w-6 rounded-full bg-[var(--color-emphasis)] transition-transform duration-300"
             style={{
-              transform: `translateX(${difficultyIndex * 78}px)`,
+              transform: `translateX(${difficultyIndex * 80}px)`,
             }}
           />
         </div>
 
-        <div className="min-w-[240px]">
-          <p className="text-xl font-black text-[var(--color-text-primary)]">
+        <div className="min-w-0 sm:min-w-[240px]">
+          <p className="text-lg font-black text-[var(--color-text-primary)] sm:text-xl">
             {currentDifficulty.label}
           </p>
 

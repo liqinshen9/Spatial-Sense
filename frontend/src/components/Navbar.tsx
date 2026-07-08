@@ -9,31 +9,31 @@ type NavbarProps = {
 function Navbar({ isDarkMode, onToggleTheme }: NavbarProps) {
   function getNavClass({ isActive }: { isActive: boolean }) {
     return isActive
-      ? "rounded-full bg-[var(--color-active-bg)] px-5 py-2 text-sm font-bold text-[var(--color-emphasis)]"
-      : "px-5 py-2 text-sm font-bold transition hover:text-[var(--color-emphasis)]";
+      ? "whitespace-nowrap rounded-full bg-[var(--color-active-bg)] px-2 py-2 text-xs font-bold text-[var(--color-emphasis)] sm:px-5 sm:text-sm"
+      : "whitespace-nowrap px-2 py-2 text-xs font-bold transition hover:text-[var(--color-emphasis)] sm:px-5 sm:text-sm";
   }
 
   return (
-    <nav className="relative z-10 flex h-14 items-center justify-between border-b border-[var(--color-nav-border)] bg-[var(--color-nav-bg)] px-12 backdrop-blur-md transition-colors duration-300">
-      <div className="flex h-full items-center gap-8">
+    <nav className="relative z-10 flex h-14 w-full items-center gap-2 border-b border-[var(--color-nav-border)] bg-[var(--color-nav-bg)] px-2 backdrop-blur-md transition-colors duration-300 sm:justify-between sm:px-8 lg:px-12">
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-8">
         <button
           type="button"
-          className="transition hover:text-[var(--color-emphasis)]"
+          className="shrink-0 transition hover:text-[var(--color-emphasis)]"
           aria-label="Sound"
         >
-          <VolumeNotice theme="outline" size="24" fill="currentColor" />
+          <VolumeNotice theme="outline" size="22" fill="currentColor" />
         </button>
 
         <button
           type="button"
           onClick={onToggleTheme}
-          className="text-[var(--color-emphasis)] transition hover:scale-110"
+          className="shrink-0 text-[var(--color-emphasis)] transition hover:scale-110"
           aria-label="Toggle theme"
         >
           {isDarkMode ? (
-            <Moon theme="outline" size="24" fill="currentColor" />
+            <Moon theme="outline" size="22" fill="currentColor" />
           ) : (
-            <SunOne theme="outline" size="24" fill="currentColor" />
+            <SunOne theme="outline" size="22" fill="currentColor" />
           )}
         </button>
 
@@ -42,13 +42,14 @@ function Navbar({ isDarkMode, onToggleTheme }: NavbarProps) {
         </NavLink>
 
         <NavLink to="/leaderboard" className={getNavClass}>
-          Leaderboard
+          <span className="sm:hidden">Board</span>
+          <span className="hidden sm:inline">Leaderboard</span>
         </NavLink>
       </div>
 
       <button
         type="button"
-        className="rounded-lg bg-[var(--color-emphasis)] px-6 py-2 text-sm font-bold text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)]"
+        className="shrink-0 rounded-lg bg-[var(--color-emphasis)] px-2.5 py-1.5 text-xs font-bold text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)] sm:px-6 sm:py-2 sm:text-sm"
       >
         Login
       </button>

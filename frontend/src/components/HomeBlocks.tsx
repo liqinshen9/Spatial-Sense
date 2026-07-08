@@ -197,7 +197,7 @@ function BlockInstance({ initialTransformIndex }: BlockInstanceProps) {
 // It contains the camera, lights, and three copies of the same block.
 function HomeBlocks() {
   return (
-    <div className="absolute inset-y-0 right-0 z-0 w-[55%]">
+    <div className="absolute inset-y-0 right-0 z-0 hidden w-[55%] sm:block">
       <Canvas
         orthographic
         shadows

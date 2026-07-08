@@ -11,7 +11,7 @@ function App() {
 
   return (
     <main
-      className={`app-shell relative min-h-screen overflow-hidden transition-colors duration-300 ${
+      className={`app-shell relative min-h-screen overflow-x-hidden transition-colors duration-300 ${
         isDarkMode ? "" : "theme-light"
       } bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]`}
     >
