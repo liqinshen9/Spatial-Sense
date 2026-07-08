@@ -1,4 +1,6 @@
 using Backend.Models;
+using System.Globalization;
+using System.Numerics;
 
 namespace Backend.Services;
 
@@ -38,62 +40,448 @@ public class PuzzleService
     private List<PuzzleDto> GeneratePuzzles()
     {
         var puzzles = new List<PuzzleDto>();
+        var id = 1;
 
-        for (var i = 0; i < 100; i++)
+        var difficultyPlan = new[]
         {
-            var difficulty = i switch
+            new { Difficulty = "Easy", Count = 100 },
+            new { Difficulty = "Medium", Count = 100 },
+            new { Difficulty = "Difficult", Count = 100 }
+        };
+
+        foreach (var plan in difficultyPlan)
+        {
+            var generatedCount = 0;
+            var attempt = 0;
+
+            while (generatedCount < plan.Count)
             {
-                < 35 => "Easy",
-                < 70 => "Medium",
-                _ => "Difficult"
-            };
+                var difficulty = plan.Difficulty;
 
-            var cubeCount = difficulty switch
-            {
-                "Easy" => 4,
-                "Medium" => 6,
-                "Difficult" => 8,
-                _ => 4
-            };
+                var cubeCount = GetCubeCount(difficulty);
+                var yellowCubeCount = GetYellowCubeCount(difficulty);
 
-            var greenCubeCount = difficulty switch
-            {
-                "Easy" => 1,
-                "Medium" => 2,
-                "Difficult" => 3,
-                _ => 1
-            };
+                var seed = GetSeed(difficulty, id, attempt);
+                var random = new Random(seed);
 
-            var rotationCount = difficulty switch
-            {
-                "Easy" => 1,
-                "Medium" => 2,
-                "Difficult" => 4,
-                _ => 1
-            };
+                var cubes = GenerateConnectedShape(
+                    cubeCount,
+                    yellowCubeCount,
+                    random
+                );
 
-            var seed = 1000 + i;
-            var random = new Random(seed);
+                var solutionMoves = GenerateMoveSequence(difficulty, random);
+                var targetOrientation = BuildOrientation(solutionMoves);
 
-            var baseCubes = GenerateConnectedShape(cubeCount, greenCubeCount, random);
-            var targetCubes = GenerateTargetShape(baseCubes, rotationCount, random);
+                var isInvalid = IsInvalidPuzzleForDifficulty(
+                    cubes,
+                    targetOrientation,
+                    difficulty
+                );
 
-            puzzles.Add(new PuzzleDto
-            {
-                Id = i + 1,
-                Seed = seed,
-                Difficulty = difficulty,
-                Cubes = baseCubes,
-                TargetCubes = targetCubes
-            });
+                if (isInvalid)
+                {
+                    attempt++;
+                    continue;
+                }
+
+                puzzles.Add(new PuzzleDto
+                {
+                    Id = id,
+                    Seed = seed,
+                    Difficulty = difficulty,
+                    Cubes = cubes,
+                    TargetOrientation = ToDto(targetOrientation),
+                    SolutionMoves = solutionMoves
+                });
+
+                id++;
+                attempt++;
+                generatedCount++;
+            }
         }
 
         return puzzles;
     }
 
+    private static int GetCubeCount(string difficulty)
+    {
+        return difficulty switch
+        {
+            "Easy" => 4,
+            "Medium" => 6,
+            "Difficult" => 8,
+            _ => 4
+        };
+    }
+
+    private static int GetYellowCubeCount(string difficulty)
+    {
+        return difficulty switch
+        {
+            "Easy" => 1,
+            "Medium" => 2,
+            "Difficult" => 3,
+            _ => 1
+        };
+    }
+
+    private static int GetSeed(string difficulty, int id, int attempt)
+    {
+        var difficultyOffset = difficulty switch
+        {
+            "Easy" => 10_000,
+            "Medium" => 20_000,
+            "Difficult" => 30_000,
+            _ => 40_000
+        };
+
+        return difficultyOffset + id * 97 + attempt * 31;
+    }
+
+    private static List<PuzzleMoveDto> GenerateMoveSequence(string difficulty, Random random)
+{
+    var moves = new List<PuzzleMoveDto>();
+    var axes = new[] { "X", "Y", "Z" };
+
+    if (difficulty == "Easy")
+    {
+        // Easy: 1 or 2 moves, only 90-degree rotations.
+        var moveCount = random.Next(1, 3);
+
+        for (var i = 0; i < moveCount; i++)
+        {
+            moves.Add(new PuzzleMoveDto
+            {
+                Axis = axes[random.Next(axes.Length)],
+                Degrees = random.Next(2) == 0 ? -90 : 90
+            });
+        }
+
+        return moves;
+    }
+
+    if (difficulty == "Medium")
+    {
+        // Medium: 3 to 5 moves, only 90-degree rotations.
+        var moveCount = random.Next(3, 6);
+
+        for (var i = 0; i < moveCount; i++)
+        {
+            moves.Add(new PuzzleMoveDto
+            {
+                Axis = axes[random.Next(axes.Length)],
+                Degrees = random.Next(2) == 0 ? -90 : 90
+            });
+        }
+
+        return moves;
+    }
+
+    /*Difficult: target appears at a 45-degree angle.Put the 45-degree move on Z, because it is the most visually obvious
+    in the current camera view.*/
+    var ninetyMoveCount = random.Next(2, 6);
+
+    for (var i = 0; i < ninetyMoveCount; i++)
+    {
+        moves.Add(new PuzzleMoveDto
+        {
+            Axis = axes[random.Next(axes.Length)],
+            Degrees = random.Next(2) == 0 ? -90 : 90
+        });
+    }
+
+    moves.Add(new PuzzleMoveDto
+    {
+        Axis = "Z",
+        Degrees = random.Next(2) == 0 ? -45 : 45
+    });
+
+    return moves;
+}    private static int GetRandomNinetyDegree(Random random)
+    {
+        return random.Next(2) == 0 ? -90 : 90;
+    }
+
+    private static int GetRandomFortyFiveDegree(Random random)
+    {
+        return random.Next(2) == 0 ? -45 : 45;
+    }
+
+    private static Quaternion BuildOrientation(List<PuzzleMoveDto> moves)
+    {
+        var orientation = Quaternion.Identity;
+
+        foreach (var move in moves)
+        {
+            var axis = move.Axis switch
+            {
+                "X" => Vector3.UnitX,
+                "Y" => Vector3.UnitY,
+                "Z" => Vector3.UnitZ,
+                _ => Vector3.UnitX
+            };
+
+            var step = Quaternion.CreateFromAxisAngle(
+                axis,
+                move.Degrees * MathF.PI / 180f
+            );
+
+            orientation = Quaternion.Normalize(
+                Quaternion.Multiply(step, orientation)
+            );
+        }
+
+        return orientation;
+    }
+
+    private static bool IsInvalidPuzzleForDifficulty(
+        List<CubeDto> cubes,
+        Quaternion targetOrientation,
+        string difficulty
+    )
+    {
+        if (IsIdentityOrientation(targetOrientation))
+        {
+            return true;
+        }
+
+        if (difficulty == "Difficult")
+        {
+            /*Difficult is invalid if the target can be matched by any 90-degree-only orientation. So if this returns true, it means
+            we reject it and generate another one.*/
+            return CanMatchUsingOnlyNinetyDegreeRotations(
+                cubes,
+                targetOrientation
+            );
+        }
+
+        //Easy and Medium only need to reject puzzles that already look solved.
+        return IsSameVisualState(
+            cubes,
+            Quaternion.Identity,
+            targetOrientation
+        );
+    }
+
+    private static bool CanMatchUsingOnlyNinetyDegreeRotations(
+        List<CubeDto> cubes,
+        Quaternion targetOrientation
+    )
+    {
+        var targetSignature = GetVisualStateSignature(
+            cubes,
+            targetOrientation
+        );
+
+        var allNinetyDegreeOrientations = GetAllNinetyDegreeOrientations();
+
+        foreach (var ninetyDegreeOrientation in allNinetyDegreeOrientations)
+        {
+            var ninetyDegreeSignature = GetVisualStateSignature(
+                cubes,
+                ninetyDegreeOrientation
+            );
+
+            if (ninetyDegreeSignature == targetSignature)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static List<Quaternion> GetAllNinetyDegreeOrientations()
+    {
+        var result = new List<Quaternion>();
+        var queue = new Queue<Quaternion>();
+        var seen = new HashSet<string>();
+
+        queue.Enqueue(Quaternion.Identity);
+        seen.Add(GetOrientationKey(Quaternion.Identity));
+
+        var axes = new[]
+        {
+            Vector3.UnitX,
+            Vector3.UnitY,
+            Vector3.UnitZ
+        };
+
+        var degreesOptions = new[] { -90, 90 };
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+
+            result.Add(current);
+
+            foreach (var axis in axes)
+            {
+                foreach (var degrees in degreesOptions)
+                {
+                    var step = Quaternion.CreateFromAxisAngle(
+                        axis,
+                        degrees * MathF.PI / 180f
+                    );
+
+                    var next = Quaternion.Normalize(
+                        Quaternion.Multiply(step, current)
+                    );
+
+                    var key = GetOrientationKey(next);
+
+                    if (!seen.Contains(key))
+                    {
+                        seen.Add(key);
+                        queue.Enqueue(next);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private static string GetOrientationKey(Quaternion orientation)
+    {
+        var rotatedX = Vector3.Transform(Vector3.UnitX, orientation);
+        var rotatedY = Vector3.Transform(Vector3.UnitY, orientation);
+        var rotatedZ = Vector3.Transform(Vector3.UnitZ, orientation);
+
+        return
+            $"{RoundAxis(rotatedX.X)},{RoundAxis(rotatedX.Y)},{RoundAxis(rotatedX.Z)}|" +
+            $"{RoundAxis(rotatedY.X)},{RoundAxis(rotatedY.Y)},{RoundAxis(rotatedY.Z)}|" +
+            $"{RoundAxis(rotatedZ.X)},{RoundAxis(rotatedZ.Y)},{RoundAxis(rotatedZ.Z)}";
+    }
+
+    private static int RoundAxis(float value)
+    {
+        if (value > 0.5f)
+        {
+            return 1;
+        }
+
+        if (value < -0.5f)
+        {
+            return -1;
+        }
+
+        return 0;
+    }
+
+    private static bool IsIdentityOrientation(Quaternion orientation)
+    {
+        var normalized = Quaternion.Normalize(orientation);
+
+        var dot = Math.Abs(
+            Quaternion.Dot(normalized, Quaternion.Identity)
+        );
+
+        return dot > 0.9999f;
+    }
+
+    private static bool IsSameVisualState(
+        List<CubeDto> cubes,
+        Quaternion firstOrientation,
+        Quaternion secondOrientation
+    )
+    {
+        var firstSignature = GetVisualStateSignature(
+            cubes,
+            firstOrientation
+        );
+
+        var secondSignature = GetVisualStateSignature(
+            cubes,
+            secondOrientation
+        );
+
+        return firstSignature == secondSignature;
+    }
+
+    private static string GetVisualStateSignature(
+        List<CubeDto> cubes,
+        Quaternion orientation
+    )
+    {
+        var minX = cubes.Min(cube => cube.X);
+        var maxX = cubes.Max(cube => cube.X);
+
+        var minY = cubes.Min(cube => cube.Y);
+        var maxY = cubes.Max(cube => cube.Y);
+
+        var minZ = cubes.Min(cube => cube.Z);
+        var maxZ = cubes.Max(cube => cube.Z);
+
+        var centerX = (minX + maxX) / 2f;
+        var centerY = (minY + maxY) / 2f;
+        var centerZ = (minZ + maxZ) / 2f;
+
+        var visualCubes = cubes
+            .Select(cube =>
+            {
+                var centeredPosition = new Vector3(
+                    cube.X - centerX,
+                    cube.Y - centerY,
+                    cube.Z - centerZ
+                );
+
+                var rotatedPosition = Vector3.Transform(
+                    centeredPosition,
+                    orientation
+                );
+
+                return new
+                {
+                    X = CleanNumber(rotatedPosition.X),
+                    Y = CleanNumber(rotatedPosition.Y),
+                    Z = CleanNumber(rotatedPosition.Z),
+                    ColorIndex = cube.ColorIndex
+                };
+            })
+            .OrderBy(cube => cube.X)
+            .ThenBy(cube => cube.Y)
+            .ThenBy(cube => cube.Z)
+            .ThenBy(cube => cube.ColorIndex)
+            .Select(cube =>
+                $"{cube.X.ToString(CultureInfo.InvariantCulture)}," +
+                $"{cube.Y.ToString(CultureInfo.InvariantCulture)}," +
+                $"{cube.Z.ToString(CultureInfo.InvariantCulture)}," +
+                $"{cube.ColorIndex}"
+            );
+
+        return string.Join("|", visualCubes);
+    }
+
+    private static float CleanNumber(float value)
+    {
+        var rounded = MathF.Round(value, 4);
+
+        if (MathF.Abs(rounded) < 0.0001f)
+        {
+            return 0;
+        }
+
+        return rounded;
+    }
+
+    private static BlockOrientationDto ToDto(Quaternion quaternion)
+    {
+        var normalized = Quaternion.Normalize(quaternion);
+
+        return new BlockOrientationDto
+        {
+            X = normalized.X,
+            Y = normalized.Y,
+            Z = normalized.Z,
+            W = normalized.W
+        };
+    }
+
     private static List<CubeDto> GenerateConnectedShape(
         int cubeCount,
-        int greenCubeCount,
+        int yellowCubeCount,
         Random random
     )
     {
@@ -114,7 +502,10 @@ public class PuzzleService
 
         while (positions.Count < cubeCount)
         {
-            var existingCube = positions.ElementAt(random.Next(positions.Count));
+            var existingCube = positions.ElementAt(
+                random.Next(positions.Count)
+            );
+
             var direction = directions[random.Next(directions.Length)];
 
             var newCube = (
@@ -136,14 +527,18 @@ public class PuzzleService
             })
         );
 
-        AssignGreenCubes(cubes, greenCubeCount, random);
+        AssignYellowCubes(
+            cubes,
+            yellowCubeCount,
+            random
+        );
 
         return cubes;
     }
 
-    private static void AssignGreenCubes(
+    private static void AssignYellowCubes(
         List<CubeDto> cubes,
-        int greenCubeCount,
+        int yellowCubeCount,
         Random random
     )
     {
@@ -152,98 +547,15 @@ public class PuzzleService
             cube.ColorIndex = 0;
         }
 
-        var greenIndexes = Enumerable.Range(0, cubes.Count)
+        var yellowIndexes = Enumerable.Range(0, cubes.Count)
             .OrderBy(_ => random.Next())
-            .Take(Math.Min(greenCubeCount, cubes.Count))
+            .Take(Math.Min(yellowCubeCount, cubes.Count))
             .ToList();
 
-        foreach (var index in greenIndexes)
+        foreach (var index in yellowIndexes)
         {
             cubes[index].ColorIndex = 1;
         }
-    }
-
-    private static List<CubeDto> GenerateTargetShape(
-        List<CubeDto> baseCubes,
-        int rotationCount,
-        Random random
-    )
-    {
-        var baseSignature = SerializeColoredCubes(baseCubes);
-
-        for (var attempt = 0; attempt < 50; attempt++)
-        {
-            var targetCubes = baseCubes
-                .Select(cube => new CubeDto
-                {
-                    X = cube.X,
-                    Y = cube.Y,
-                    Z = cube.Z,
-                    ColorIndex = cube.ColorIndex
-                })
-                .ToList();
-
-            for (var i = 0; i < rotationCount; i++)
-            {
-                var axis = random.Next(3);
-
-                targetCubes = targetCubes.Select(cube =>
-                {
-                    return axis switch
-                    {
-                        0 => RotateX(cube),
-                        1 => RotateY(cube),
-                        2 => RotateZ(cube),
-                        _ => cube
-                    };
-                }).ToList();
-            }
-
-            targetCubes = Normalize(targetCubes);
-
-            var targetSignature = SerializeColoredCubes(targetCubes);
-
-            if (targetSignature != baseSignature)
-            {
-                return targetCubes;
-            }
-        }
-
-        // Fallback: force one X rotation if random attempts accidentally return the same state.
-        return Normalize(baseCubes.Select(RotateX));
-    }
-
-    private static CubeDto RotateX(CubeDto cube)
-    {
-        return new CubeDto
-        {
-            X = cube.X,
-            Y = -cube.Z,
-            Z = cube.Y,
-            ColorIndex = cube.ColorIndex
-        };
-    }
-
-    private static CubeDto RotateY(CubeDto cube)
-    {
-        return new CubeDto
-        {
-            X = cube.Z,
-            Y = cube.Y,
-            Z = -cube.X,
-            ColorIndex = cube.ColorIndex
-        };
-    }
-
-    private static CubeDto RotateZ(CubeDto cube)
-    {
-        return new CubeDto
-        {
-            X = -cube.Y,
-            Y = cube.X,
-            Z = cube.Z,
-            ColorIndex = cube.ColorIndex
-        };
     }
 
     private static List<CubeDto> Normalize(IEnumerable<CubeDto> cubes)
@@ -267,15 +579,5 @@ public class PuzzleService
             .ThenBy(cube => cube.Z)
             .ThenBy(cube => cube.ColorIndex)
             .ToList();
-    }
-
-    private static string SerializeColoredCubes(IEnumerable<CubeDto> cubes)
-    {
-        return string.Join(
-            "|",
-            Normalize(cubes).Select(cube =>
-                $"{cube.X},{cube.Y},{cube.Z},{cube.ColorIndex}"
-            )
-        );
     }
 }

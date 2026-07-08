@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-type Difficulty = "easy" | "medium" | "hard";
+type Difficulty = "easy" | "medium" | "difficult";
 
 type LeaderboardEntry = {
   rank: number;
@@ -24,7 +24,7 @@ const leaderboardData: Record<Difficulty, LeaderboardEntry[]> = {
     { rank: 4, username: "AngleHunter", time: "02:12" },
     { rank: 5, username: "GridGhost", time: "02:35" },
   ],
-  hard: [
+  difficult: [
     { rank: 1, username: "NoMercy", time: "03:08" },
     { rank: 2, username: "BrainBurn", time: "03:46" },
     { rank: 3, username: "FinalTry", time: "04:21" },
@@ -36,7 +36,7 @@ const leaderboardData: Record<Difficulty, LeaderboardEntry[]> = {
 const difficultyOptions: { label: string; value: Difficulty }[] = [
   { label: "Easy", value: "easy" },
   { label: "Medium", value: "medium" },
-  { label: "Hard", value: "hard" },
+  { label: "Difficult", value: "difficult" },
 ];
 
 function LeaderboardPage() {

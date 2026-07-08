@@ -18,5 +18,23 @@ public class PuzzleDto
     public string Difficulty { get; set; } = "Easy";
 
     public List<CubeDto> Cubes { get; set; } = new();
-    public List<CubeDto> TargetCubes { get; set; } = new();
+    public BlockOrientationDto TargetOrientation { get; set; } = new();
+
+    //for debugging, will not show this to the player
+    public List<PuzzleMoveDto> SolutionMoves { get; set; } = new();
+}
+
+
+public class BlockOrientationDto
+{
+    public double X { get; set; }
+    public double Y { get; set; }
+    public double Z { get; set; }
+    public double W { get; set; } = 1;
+}
+
+public class PuzzleMoveDto
+{
+    public string Axis { get; set; } = "X";
+    public int Degrees { get; set; }
 }

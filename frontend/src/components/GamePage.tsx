@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Quaternion, Vector3 } from "three";
 import { getRandomPuzzle } from "../api/puzzles";
 import PuzzleBlockCanvas from "./PuzzleBlockCanvas";
-import type { CubeDto, PuzzleDto } from "../types/puzzle";
+import type { BlockOrientation, CubeDto, PuzzleDto } from "../types/puzzle";
 
 type GamePageProps = {
   difficultyIndex: number;
@@ -10,13 +10,6 @@ type GamePageProps = {
 
 type Axis = "X" | "Y" | "Z";
 type RotationStep = -90 | -45 | 45 | 90;
-
-type BlockOrientation = {
-  x: number;
-  y: number;
-  z: number;
-  w: number;
-};
 
 const difficultyNames = ["Easy", "Medium", "Difficult"] as const;
 const totalProgressSteps = 10;
@@ -71,97 +64,75 @@ function getNextOrientation(
     (degrees * Math.PI) / 180
   );
 
-  /*
-    This applies the new rotation around the global X/Y/Z axis.
-    No X/Z reverse multiplier is used here.
-  */
-  const nextQuaternion = stepQuaternion.multiply(currentQuaternion).normalize();
+  const nextQuaternion = stepQuaternion
+    .multiply(currentQuaternion)
+    .normalize();
 
   return quaternionToOrientation(nextQuaternion);
 }
 
-function normalizeCubes(cubes: CubeDto[]) {
+function cleanNumber(value: number) {
+  const rounded = Number(value.toFixed(4));
+  return Math.abs(rounded) < 0.0001 ? 0 : rounded;
+}
+
+function getCenteredCubes(cubes: CubeDto[]) {
   if (cubes.length === 0) return [];
 
-  const minX = Math.min(...cubes.map((cube) => cube.x));
-  const minY = Math.min(...cubes.map((cube) => cube.y));
-  const minZ = Math.min(...cubes.map((cube) => cube.z));
+  const xs = cubes.map((cube) => cube.x);
+  const ys = cubes.map((cube) => cube.y);
+  const zs = cubes.map((cube) => cube.z);
 
-  return cubes
-    .map((cube) => ({
-      x: cube.x - minX,
-      y: cube.y - minY,
-      z: cube.z - minZ,
-      colorIndex: cube.colorIndex ?? 0,
-    }))
+  const centerX = (Math.min(...xs) + Math.max(...xs)) / 2;
+  const centerY = (Math.min(...ys) + Math.max(...ys)) / 2;
+  const centerZ = (Math.min(...zs) + Math.max(...zs)) / 2;
+
+  return cubes.map((cube) => ({
+    x: cube.x - centerX,
+    y: cube.y - centerY,
+    z: cube.z - centerZ,
+    colorIndex: cube.colorIndex ?? 0,
+  }));
+}
+
+function getVisualStateSignature(
+  cubes: CubeDto[],
+  orientation: BlockOrientation
+) {
+  const quaternion = orientationToQuaternion(orientation);
+
+  return getCenteredCubes(cubes)
+    .map((cube) => {
+      const rotatedPosition = new Vector3(cube.x, cube.y, cube.z).applyQuaternion(
+        quaternion
+      );
+
+      return {
+        x: cleanNumber(rotatedPosition.x),
+        y: cleanNumber(rotatedPosition.y),
+        z: cleanNumber(rotatedPosition.z),
+        colorIndex: cube.colorIndex ?? 0,
+      };
+    })
     .sort((a, b) => {
       if (a.x !== b.x) return a.x - b.x;
       if (a.y !== b.y) return a.y - b.y;
       if (a.z !== b.z) return a.z - b.z;
       return a.colorIndex - b.colorIndex;
-    });
-}
-
-function serializeCubes(cubes: CubeDto[]) {
-  return normalizeCubes(cubes)
+    })
     .map((cube) => `${cube.x},${cube.y},${cube.z},${cube.colorIndex}`)
     .join("|");
 }
 
-function getRotatedCubesFromOrientation(
+function doBlocksVisuallyMatch(
   cubes: CubeDto[],
-  orientation: BlockOrientation
+  currentOrientation: BlockOrientation,
+  targetOrientation: BlockOrientation
 ) {
-  const quaternion = orientationToQuaternion(orientation);
-  const rotatedCubes: CubeDto[] = [];
+  const currentState = getVisualStateSignature(cubes, currentOrientation);
+  const targetState = getVisualStateSignature(cubes, targetOrientation);
 
-  for (const cube of cubes) {
-    const rotatedPosition = new Vector3(cube.x, cube.y, cube.z).applyQuaternion(
-      quaternion
-    );
-
-    const roundedX = Math.round(rotatedPosition.x);
-    const roundedY = Math.round(rotatedPosition.y);
-    const roundedZ = Math.round(rotatedPosition.z);
-
-    /*if the position is not close to integer coordinates,
-      then the block is probably at 45 degrees and cannot exactly match
-      the target grid yet.*/
-    const isOnGrid =
-      Math.abs(rotatedPosition.x - roundedX) < 0.0001 &&
-      Math.abs(rotatedPosition.y - roundedY) < 0.0001 &&
-      Math.abs(rotatedPosition.z - roundedZ) < 0.0001;
-
-    if (!isOnGrid) {
-      return null;
-    }
-
-    rotatedCubes.push({
-        x: roundedX,
-        y: roundedY,
-        z: roundedZ,
-        colorIndex: cube.colorIndex ?? 0,
-      });
-  }
-
-  return normalizeCubes(rotatedCubes);
-}
-
-function doBlocksMatch(
-  originalCubes: CubeDto[],
-  targetCubes: CubeDto[],
-  orientation: BlockOrientation
-) {
-  const rotatedCubes = getRotatedCubesFromOrientation(
-    originalCubes,
-    orientation
-  );
-
-  if (rotatedCubes === null) {
-    return false;
-  }
-
-  return serializeCubes(rotatedCubes) === serializeCubes(targetCubes);
+  return currentState === targetState;
 }
 
 function ProgressGrid({
@@ -184,7 +155,9 @@ function ProgressGrid({
     <div className="grid grid-cols-2 gap-2.5">
       {steps.map((step) => {
         const isDone =
-          isGameComplete || step < currentStep || (isSolved && step === currentStep);
+          isGameComplete ||
+          step < currentStep ||
+          (isSolved && step === currentStep);
 
         const isActive = step === currentStep && !isSolved && !isGameComplete;
 
@@ -239,8 +212,28 @@ function GamePage({ difficultyIndex }: GamePageProps) {
       setIsSolved(false);
       setBlockOrientation(identityOrientation);
 
-      const newPuzzle = await getRandomPuzzle(difficultyName);
-      setPuzzle(newPuzzle);
+      let validPuzzle: PuzzleDto | null = null;
+
+      for (let attempt = 0; attempt < 12; attempt++) {
+        const candidatePuzzle = await getRandomPuzzle(difficultyName);
+
+        const alreadySolved = doBlocksVisuallyMatch(
+          candidatePuzzle.cubes,
+          identityOrientation,
+          candidatePuzzle.targetOrientation
+        );
+
+        if (!alreadySolved) {
+          validPuzzle = candidatePuzzle;
+          break;
+        }
+      }
+
+      if (!validPuzzle) {
+        throw new Error("Could not find a valid puzzle.");
+      }
+
+      setPuzzle(validPuzzle);
     } catch {
       setPuzzleError("Failed to load puzzle.");
     } finally {
@@ -309,10 +302,10 @@ function GamePage({ difficultyIndex }: GamePageProps) {
 
     setBlockOrientation(nextOrientation);
 
-    const hasSolvedPuzzle = doBlocksMatch(
+    const hasSolvedPuzzle = doBlocksVisuallyMatch(
       puzzle.cubes,
-      puzzle.targetCubes,
-      nextOrientation
+      nextOrientation,
+      puzzle.targetOrientation
     );
 
     if (hasSolvedPuzzle) {
@@ -367,7 +360,8 @@ function GamePage({ difficultyIndex }: GamePageProps) {
             {!isLoadingPuzzle && puzzle && (
               <PuzzleBlockCanvas
                 key={`target-${currentProgressStep}-${puzzle.id}`}
-                cubes={puzzle.targetCubes}
+                cubes={puzzle.cubes}
+                orientation={puzzle.targetOrientation}
                 size="target"
               />
             )}
