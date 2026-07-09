@@ -40,15 +40,16 @@ const difficultyOptions: { label: string; value: Difficulty }[] = [
 ];
 
 function LeaderboardPage() {
-  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>("easy");
+  const [selectedDifficulty, setSelectedDifficulty] =
+    useState<Difficulty>("easy");
+
   const currentRankings = leaderboardData[selectedDifficulty];
 
   return (
-    <section className="relative z-10 min-h-[calc(100vh-56px)] px-12 py-10">
+    <section className="relative z-10 min-h-[calc(100vh-56px)] px-4 py-6 sm:px-12 sm:py-10">
       <div className="mx-auto max-w-5xl">
-
         {/* difficulty control */}
-        <div className="mb-8 flex w-fit rounded-2xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] p-2 backdrop-blur-md">
+        <div className="mb-6 flex w-full rounded-2xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] p-1.5 backdrop-blur-md sm:mb-8 sm:w-fit sm:p-2">
           {difficultyOptions.map((difficulty) => {
             const isActive = selectedDifficulty === difficulty.value;
 
@@ -57,7 +58,7 @@ function LeaderboardPage() {
                 key={difficulty.value}
                 type="button"
                 onClick={() => setSelectedDifficulty(difficulty.value)}
-                className={`rounded-xl px-8 py-3 text-sm font-black uppercase tracking-[0.18em] transition ${
+                className={`flex-1 rounded-xl px-2 py-3 text-[10px] font-black uppercase tracking-[0.12em] transition sm:flex-none sm:px-8 sm:text-sm sm:tracking-[0.18em] ${
                   isActive
                     ? "bg-[var(--color-emphasis)] text-[var(--color-emphasis-contrast)]"
                     : "text-[var(--color-text-primary)] opacity-70 hover:opacity-100"
@@ -71,7 +72,7 @@ function LeaderboardPage() {
 
         {/* ranking table */}
         <div className="overflow-hidden rounded-3xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] backdrop-blur-md">
-          <div className="grid grid-cols-[100px_1fr_180px] border-b border-[var(--color-nav-border)] px-8 py-5 text-sm font-black uppercase tracking-[0.2em] opacity-70">
+          <div className="grid grid-cols-[56px_minmax(0,1fr)_88px] border-b border-[var(--color-nav-border)] px-4 py-4 text-[10px] font-black uppercase tracking-[0.14em] opacity-70 sm:grid-cols-[100px_1fr_180px] sm:px-8 sm:py-5 sm:text-sm sm:tracking-[0.2em]">
             <p>Rank</p>
             <p>Username</p>
             <p className="text-right">Time</p>
@@ -82,19 +83,19 @@ function LeaderboardPage() {
             {currentRankings.map((player) => (
               <div
                 key={player.rank}
-                className="grid grid-cols-[100px_1fr_180px] items-center border-b border-[var(--color-nav-border)] px-8 py-5 last:border-b-0"
+                className="grid grid-cols-[56px_minmax(0,1fr)_88px] items-center border-b border-[var(--color-nav-border)] px-4 py-4 last:border-b-0 sm:grid-cols-[100px_1fr_180px] sm:px-8 sm:py-5"
               >
                 <div>
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-emphasis)] text-lg font-black text-[var(--color-emphasis-contrast)]">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-emphasis)] text-sm font-black text-[var(--color-emphasis-contrast)] sm:h-10 sm:w-10 sm:text-lg">
                     {player.rank}
                   </span>
                 </div>
 
-                <p className="text-xl font-black text-[var(--color-text-primary)]">
+                <p className="truncate pr-3 text-base font-black text-[var(--color-text-primary)] sm:text-xl">
                   {player.username}
                 </p>
 
-                <p className="text-right font-mono text-xl font-black text-[var(--color-emphasis)]">
+                <p className="text-right font-mono text-base font-black text-[var(--color-emphasis)] sm:text-xl">
                   {player.time}
                 </p>
               </div>

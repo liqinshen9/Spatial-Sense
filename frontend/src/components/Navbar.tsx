@@ -42,8 +42,7 @@ function Navbar({ isDarkMode, onToggleTheme }: NavbarProps) {
         </NavLink>
 
         <NavLink to="/leaderboard" className={getNavClass}>
-          <span className="sm:hidden">Board</span>
-          <span className="hidden sm:inline">Leaderboard</span>
+          Leaderboard
         </NavLink>
       </div>
 
