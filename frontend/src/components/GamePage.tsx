@@ -4,8 +4,16 @@ import { getRandomPuzzle } from "../api/puzzles";
 import PuzzleBlockCanvas from "./PuzzleBlockCanvas";
 import type { BlockOrientation, CubeDto, PuzzleDto } from "../types/puzzle";
 
+export type CompletedScore = {
+  difficultyName: string;
+  elapsedMilliseconds: number;
+  formattedTime: string;
+};
+
 type GamePageProps = {
   difficultyIndex: number;
+  onBackHome: () => void;
+  onOpenAuthModal: (score: CompletedScore) => void;
 };
 
 type Axis = "X" | "Y" | "Z";
@@ -104,9 +112,11 @@ function getVisualStateSignature(
 
   return getCenteredCubes(cubes)
     .map((cube) => {
-      const rotatedPosition = new Vector3(cube.x, cube.y, cube.z).applyQuaternion(
-        quaternion
-      );
+      const rotatedPosition = new Vector3(
+        cube.x,
+        cube.y,
+        cube.z
+      ).applyQuaternion(quaternion);
 
       return {
         x: cleanNumber(rotatedPosition.x),
@@ -181,13 +191,78 @@ function ProgressGrid({
   );
 }
 
-function GamePage({ difficultyIndex }: GamePageProps) {
+function GameCompleteModal({
+  finalTime,
+  onConfirm,
+  onBackHome,
+}: {
+  finalTime: number;
+  onConfirm: () => void;
+  onBackHome: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-nav-bg)] px-6 backdrop-blur-sm">
+      <div className="game-complete-card w-full max-w-[912px] rounded-[20px] border border-[var(--color-nav-border)] px-8 py-8 shadow-2xl">
+        <h2 className="text-center text-3xl font-black text-[var(--color-text-primary)]">
+          Game Complete!
+        </h2>
+
+        <div className="mt-8 h-px w-full bg-[var(--color-nav-border)]" />
+
+        <div className="mt-10 text-center">
+          <p className="text-7xl font-black leading-none text-[var(--color-emphasis)] md:text-8xl">
+            {formatTime(finalTime)}
+          </p>
+
+          <p className="mt-4 text-sm font-black uppercase tracking-[0.28em] text-[var(--color-text-primary)] opacity-60">
+            Final Time
+          </p>
+        </div>
+
+        <div className="mt-44 text-center">
+          <p className="text-lg font-black text-[var(--color-text-primary)] opacity-70">
+            Log in to save your score!
+          </p>
+
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={onConfirm}
+              className="rounded-lg bg-[var(--color-emphasis)] px-7 py-3 text-base font-black text-[var(--color-emphasis-contrast)] transition hover:scale-[1.02]"
+            >
+              Confirm
+            </button>
+
+            <button
+              type="button"
+              onClick={onBackHome}
+              className="rounded-lg border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] px-7 py-3 text-base font-black text-[var(--color-text-primary)] transition hover:border-[var(--color-emphasis)] hover:text-[var(--color-emphasis)]"
+            >
+              Back to Home Page
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GamePage({
+  difficultyIndex,
+  onBackHome,
+  onOpenAuthModal,
+}: GamePageProps) {
   const difficultyName = difficultyNames[difficultyIndex] ?? "Easy";
 
   const [elapsedMilliseconds, setElapsedMilliseconds] = useState(0);
+  const [finalElapsedMilliseconds, setFinalElapsedMilliseconds] =
+    useState<number | null>(null);
+
   const timerStartRef = useRef(performance.now());
+
   const [selectedRotationStep, setSelectedRotationStep] =
     useState<RotationStep>(90);
+
   const [currentProgressStep, setCurrentProgressStep] = useState(1);
 
   const [puzzle, setPuzzle] = useState<PuzzleDto | null>(null);
@@ -245,22 +320,28 @@ function GamePage({ difficultyIndex }: GamePageProps) {
 
   useEffect(() => {
     timerStartRef.current = performance.now();
+
     setElapsedMilliseconds(0);
+    setFinalElapsedMilliseconds(null);
     setCurrentProgressStep(1);
     setIsGameComplete(false);
+    setIsSolved(false);
+    setSelectedRotationStep(90);
+    setBlockOrientation(identityOrientation);
+
     loadPuzzle();
   }, [loadPuzzle]);
 
   useEffect(() => {
-  timerStartRef.current = performance.now();
+    if (isGameComplete) return;
 
-  const timer = window.setInterval(() => {
-    const elapsed = Math.floor(performance.now() - timerStartRef.current);
-    setElapsedMilliseconds(elapsed);
-  }, 10);
+    const timer = window.setInterval(() => {
+      const elapsed = Math.floor(performance.now() - timerStartRef.current);
+      setElapsedMilliseconds(elapsed);
+    }, 10);
 
-  return () => window.clearInterval(timer);
-}, []);
+    return () => window.clearInterval(timer);
+  }, [isGameComplete]);
 
   useEffect(() => {
     return () => {
@@ -274,6 +355,10 @@ function GamePage({ difficultyIndex }: GamePageProps) {
     solveTimeoutRef.current = null;
 
     if (currentProgressStep >= totalProgressSteps) {
+      const finalTime = Math.floor(performance.now() - timerStartRef.current);
+
+      setElapsedMilliseconds(finalTime);
+      setFinalElapsedMilliseconds(finalTime);
       setIsGameComplete(true);
       setIsSolved(false);
       return;
@@ -327,6 +412,7 @@ function GamePage({ difficultyIndex }: GamePageProps) {
 
     timerStartRef.current = performance.now();
     setElapsedMilliseconds(0);
+    setFinalElapsedMilliseconds(null);
     setSelectedRotationStep(90);
     setBlockOrientation(identityOrientation);
     setIsSolved(false);
@@ -336,6 +422,16 @@ function GamePage({ difficultyIndex }: GamePageProps) {
       setIsGameComplete(false);
       loadPuzzle();
     }
+  }
+
+  function handleConfirmScore() {
+    if (finalElapsedMilliseconds === null) return;
+
+    onOpenAuthModal({
+      difficultyName,
+      elapsedMilliseconds: finalElapsedMilliseconds,
+      formattedTime: formatTime(finalElapsedMilliseconds),
+    });
   }
 
   return (
@@ -403,13 +499,11 @@ function GamePage({ difficultyIndex }: GamePageProps) {
           </div>
 
           <div className="px-5 py-3">
-
             <p className="text-center text-xs font-black uppercase tracking-[0.24em] text-[var(--color-emphasis)]">
               Rotation Control
             </p>
 
             <div className="mt-4 flex flex-col items-center gap-3">
-              {/* angle buttons */}
               <div className="flex items-center justify-center gap-3">
                 {([-90, -45, 45, 90] as RotationStep[]).map((step) => {
                   const isActive = selectedRotationStep === step;
@@ -499,6 +593,14 @@ function GamePage({ difficultyIndex }: GamePageProps) {
           </div>
         </aside>
       </div>
+
+      {isGameComplete && finalElapsedMilliseconds !== null && (
+        <GameCompleteModal
+          finalTime={finalElapsedMilliseconds}
+          onConfirm={handleConfirmScore}
+          onBackHome={onBackHome}
+        />
+      )}
     </section>
   );
 }

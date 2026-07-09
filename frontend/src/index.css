@@ -82,3 +82,10 @@ body {
 #root {
   min-height: 100vh;
 }
+.game-complete-card {
+  background: var(--color-bg-primary);
+}
+
+.app-shell.theme-light .game-complete-card {
+  background: var(--color-surface-alt);
+}
