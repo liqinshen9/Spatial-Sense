@@ -3,6 +3,7 @@ import { Quaternion, Vector3 } from "three";
 import { getRandomPuzzle } from "../api/puzzles";
 import PuzzleBlockCanvas from "./PuzzleBlockCanvas";
 import type { BlockOrientation, CubeDto, PuzzleDto } from "../types/puzzle";
+import type { AuthUser } from "../types/auth";
 
 export type CompletedScore = {
   difficultyName: string;
@@ -12,8 +13,10 @@ export type CompletedScore = {
 
 type GamePageProps = {
   difficultyIndex: number;
+  currentUser: AuthUser | null;
   onBackHome: () => void;
   onOpenAuthModal: (score: CompletedScore) => void;
+  onViewLeaderboard: (score: CompletedScore) => void | Promise<void>;
 };
 
 type Axis = "X" | "Y" | "Z";
@@ -193,10 +196,12 @@ function ProgressGrid({
 
 function GameCompleteModal({
   finalTime,
+  isLoggedIn,
   onConfirm,
   onBackHome,
 }: {
   finalTime: number;
+  isLoggedIn: boolean;
   onConfirm: () => void;
   onBackHome: () => void;
 }) {
@@ -221,7 +226,9 @@ function GameCompleteModal({
 
         <div className="mt-24 text-center md:mt-44">
           <p className="text-base font-black text-[var(--color-text-primary)] opacity-70 md:text-lg">
-            Log in to save your score!
+            {isLoggedIn
+              ? "View your rank on the leaderboard!"
+              : "Log in to save your score!"}
           </p>
 
           <div className="mt-5 flex items-center justify-center gap-3 md:mt-4">
@@ -230,16 +237,18 @@ function GameCompleteModal({
               onClick={onConfirm}
               className="rounded-lg bg-[var(--color-emphasis)] px-7 py-3 text-base font-black text-[var(--color-emphasis-contrast)] transition hover:scale-[1.02]"
             >
-              Confirm
+              {isLoggedIn ? "View Leaderboard" : "Confirm"}
             </button>
 
-            <button
-              type="button"
-              onClick={onBackHome}
-              className="rounded-lg border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] px-7 py-3 text-base font-black text-[var(--color-text-primary)] transition hover:border-[var(--color-emphasis)] hover:text-[var(--color-emphasis)]"
-            >
-              Home
-            </button>
+            {!isLoggedIn && (
+              <button
+                type="button"
+                onClick={onBackHome}
+                className="rounded-lg border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] px-7 py-3 text-base font-black text-[var(--color-text-primary)] transition hover:border-[var(--color-emphasis)] hover:text-[var(--color-emphasis)]"
+              >
+                Home
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -249,8 +258,10 @@ function GameCompleteModal({
 
 function GamePage({
   difficultyIndex,
+  currentUser,
   onBackHome,
   onOpenAuthModal,
+  onViewLeaderboard,
 }: GamePageProps) {
   const difficultyName = difficultyNames[difficultyIndex] ?? "Easy";
 
@@ -414,35 +425,33 @@ function GamePage({
   }
 
   function handleReset() {
+    if (isSolved || isGameComplete) return;
+
     if (solveTimeoutRef.current !== null) {
       window.clearTimeout(solveTimeoutRef.current);
       solveTimeoutRef.current = null;
     }
 
-    timerStartRef.current = performance.now();
-    setElapsedMilliseconds(0);
-    setFinalElapsedMilliseconds(null);
-    setSelectedRotationStep(90);
+    setBlockOrientation(identityOrientation);
     setSelectedAxis(null);
     setHoveredAxis(null);
-    setBlockOrientation(identityOrientation);
-    setIsSolved(false);
-
-    if (isGameComplete) {
-      setCurrentProgressStep(1);
-      setIsGameComplete(false);
-      loadPuzzle();
-    }
   }
 
   function handleConfirmScore() {
     if (finalElapsedMilliseconds === null) return;
 
-    onOpenAuthModal({
+    const score = {
       difficultyName,
       elapsedMilliseconds: finalElapsedMilliseconds,
       formattedTime: formatTime(finalElapsedMilliseconds),
-    });
+    };
+
+    if (currentUser) {
+      onViewLeaderboard(score);
+      return;
+    }
+
+    onOpenAuthModal(score);
   }
 
   const highlightedAxis = hoveredAxis ?? selectedAxis;
@@ -650,6 +659,7 @@ function GamePage({
       {isGameComplete && finalElapsedMilliseconds !== null && (
         <GameCompleteModal
           finalTime={finalElapsedMilliseconds}
+          isLoggedIn={currentUser !== null}
           onConfirm={handleConfirmScore}
           onBackHome={onBackHome}
         />

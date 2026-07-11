@@ -1,12 +1,22 @@
 import { VolumeNotice, SunOne, Moon } from "@icon-park/react";
 import { NavLink } from "react-router-dom";
+import type { AuthUser } from "../types/auth";
 
 type NavbarProps = {
   isDarkMode: boolean;
+  currentUser: AuthUser | null;
   onToggleTheme: () => void;
+  onLoginClick: () => void;
+  onLogout: () => void;
 };
 
-function Navbar({ isDarkMode, onToggleTheme }: NavbarProps) {
+function Navbar({
+  isDarkMode,
+  currentUser,
+  onToggleTheme,
+  onLoginClick,
+  onLogout,
+}: NavbarProps) {
   function getNavClass({ isActive }: { isActive: boolean }) {
     return isActive
       ? "whitespace-nowrap rounded-full bg-[var(--color-active-bg)] px-2 py-2 text-xs font-bold text-[var(--color-emphasis)] sm:px-5 sm:text-sm"
@@ -46,12 +56,32 @@ function Navbar({ isDarkMode, onToggleTheme }: NavbarProps) {
         </NavLink>
       </div>
 
-      <button
-        type="button"
-        className="shrink-0 rounded-lg bg-[var(--color-emphasis)] px-2.5 py-1.5 text-xs font-bold text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)] sm:px-6 sm:py-2 sm:text-sm"
-      >
-        Login
-      </button>
+      {currentUser ? (
+        <div className="flex shrink-0 items-center gap-2">
+          <p className="hidden text-sm font-bold text-[var(--color-text-primary)] sm:block">
+            Hello,{" "}
+            <span className="text-[var(--color-emphasis)]">
+              {currentUser.name}
+            </span>
+          </p>
+
+          <button
+            type="button"
+            onClick={onLogout}
+            className="rounded-lg border border-[var(--color-nav-border)] px-2.5 py-1.5 text-xs font-bold text-[var(--color-text-primary)] transition hover:border-[var(--color-emphasis)] hover:text-[var(--color-emphasis)] sm:px-4 sm:py-2 sm:text-sm"
+          >
+            Logout
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={onLoginClick}
+          className="shrink-0 rounded-lg bg-[var(--color-emphasis)] px-2.5 py-1.5 text-xs font-bold text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)] sm:px-6 sm:py-2 sm:text-sm"
+        >
+          Login
+        </button>
+      )}
     </nav>
   );
 }

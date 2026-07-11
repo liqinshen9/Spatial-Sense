@@ -25,6 +25,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddSingleton<PuzzleService>();
+builder.Services.AddSingleton<PasswordService>();
 
 var app = builder.Build();
 
@@ -34,68 +35,17 @@ app.MapGet("/", () => "Backend is running!");
 
 app.MapGet("/api/users", async (AppDbContext db) =>
 {
-    var users = await db.Users.ToListAsync();
+    var users = await db.Users
+        .Select(user => new
+        {
+            user.Id,
+            user.Name,
+            user.Email,
+            user.CreatedAt
+        })
+        .ToListAsync();
+
     return Results.Ok(users);
-});
-
-app.MapGet("/api/users/{id}", async (int id, AppDbContext db) =>
-{
-    var user = await db.Users.FindAsync(id);
-
-    if (user == null)
-    {
-        return Results.NotFound();
-    }
-
-    return Results.Ok(user);
-});
-
-app.MapPost("/api/users", async (User user, AppDbContext db) =>
-{
-    if (string.IsNullOrWhiteSpace(user.Name) || string.IsNullOrWhiteSpace(user.Email))
-    {
-        return Results.BadRequest("Name and email are required.");
-    }
-    db.Users.Add(user);
-    await db.SaveChangesAsync();
-    return Results.Created($"/api/users/{user.Id}", user);
-});
-
-app.MapPut("/api/users/{id}", async (int id, User updatedUser, AppDbContext db) =>
-{
-    if (string.IsNullOrWhiteSpace(updatedUser.Name) || string.IsNullOrWhiteSpace(updatedUser.Email))
-    {
-        return Results.BadRequest("Name and email are required.");
-    }
-
-    var user = await db.Users.FindAsync(id);
-
-    if (user == null)
-    {
-        return Results.NotFound();
-    }
-
-    user.Name = updatedUser.Name;
-    user.Email = updatedUser.Email;
-
-    await db.SaveChangesAsync();
-
-    return Results.Ok(user);
-});
-
-app.MapDelete("/api/users/{id}", async (int id, AppDbContext db) =>
-{
-    var user = await db.Users.FindAsync(id);
-
-    if (user == null)
-    {
-        return Results.NotFound();
-    }
-
-    db.Users.Remove(user);
-    await db.SaveChangesAsync();
-
-    return Results.NoContent();
 });
 
 app.MapControllers();
