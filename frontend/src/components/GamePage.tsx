@@ -3,6 +3,7 @@ import { Quaternion, Vector3 } from "three";
 import { getRandomPuzzle } from "../api/puzzles";
 import PuzzleBlockCanvas from "./PuzzleBlockCanvas";
 import type { BlockOrientation, CubeDto, PuzzleDto } from "../types/puzzle";
+import type { AuthUser } from "../types/auth";
 
 export type CompletedScore = {
   difficultyName: string;
@@ -12,8 +13,10 @@ export type CompletedScore = {
 
 type GamePageProps = {
   difficultyIndex: number;
+  currentUser: AuthUser | null;
   onBackHome: () => void;
   onOpenAuthModal: (score: CompletedScore) => void;
+  onViewLeaderboard: (score: CompletedScore) => void | Promise<void>;
 };
 
 type Axis = "X" | "Y" | "Z";
@@ -163,7 +166,7 @@ function ProgressGrid({
   );
 
   return (
-    <div className="grid grid-cols-2 gap-2.5">
+    <div className="grid grid-cols-5 gap-2 lg:grid-cols-2 lg:gap-2.5">
       {steps.map((step) => {
         const isDone =
           isGameComplete ||
@@ -175,7 +178,7 @@ function ProgressGrid({
         return (
           <div
             key={step}
-            className={`flex h-11 w-11 items-center justify-center rounded-xl border text-sm font-black transition ${
+            className={`flex h-8 w-8 items-center justify-center rounded-lg border text-xs font-black transition lg:h-11 lg:w-11 lg:rounded-xl lg:text-sm ${
               isDone
                 ? "border-[var(--color-emphasis)] bg-[var(--color-emphasis)] text-[var(--color-emphasis-contrast)]"
                 : isActive
@@ -193,53 +196,59 @@ function ProgressGrid({
 
 function GameCompleteModal({
   finalTime,
+  isLoggedIn,
   onConfirm,
   onBackHome,
 }: {
   finalTime: number;
+  isLoggedIn: boolean;
   onConfirm: () => void;
   onBackHome: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-nav-bg)] px-6 backdrop-blur-sm">
-      <div className="game-complete-card w-full max-w-[912px] rounded-[20px] border border-[var(--color-nav-border)] px-8 py-8 shadow-2xl">
-        <h2 className="text-center text-3xl font-black text-[var(--color-text-primary)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-nav-bg)] px-5 backdrop-blur-sm md:px-6">
+      <div className="game-complete-card w-full max-w-[340px] rounded-[20px] border border-[var(--color-nav-border)] px-6 py-8 shadow-2xl md:max-w-[912px] md:px-8">
+        <h2 className="text-center text-2xl font-black text-[var(--color-text-primary)] md:text-3xl">
           Game Complete!
         </h2>
 
-        <div className="mt-8 h-px w-full bg-[var(--color-nav-border)]" />
+        <div className="mt-7 h-px w-full bg-[var(--color-nav-border)] md:mt-8" />
 
-        <div className="mt-10 text-center">
-          <p className="text-7xl font-black leading-none text-[var(--color-emphasis)] md:text-8xl">
+        <div className="mt-8 text-center md:mt-10">
+          <p className="text-5xl font-black leading-none text-[var(--color-emphasis)] sm:text-6xl md:text-8xl">
             {formatTime(finalTime)}
           </p>
 
-          <p className="mt-4 text-sm font-black uppercase tracking-[0.28em] text-[var(--color-text-primary)] opacity-60">
+          <p className="mt-4 text-xs font-black uppercase tracking-[0.28em] text-[var(--color-text-primary)] opacity-60 md:text-sm">
             Final Time
           </p>
         </div>
 
-        <div className="mt-44 text-center">
-          <p className="text-lg font-black text-[var(--color-text-primary)] opacity-70">
-            Log in to save your score!
+        <div className="mt-24 text-center md:mt-44">
+          <p className="text-base font-black text-[var(--color-text-primary)] opacity-70 md:text-lg">
+            {isLoggedIn
+              ? "View your rank on the leaderboard!"
+              : "Log in to save your score!"}
           </p>
 
-          <div className="mt-4 flex items-center justify-center gap-3">
+          <div className="mt-5 flex items-center justify-center gap-3 md:mt-4">
             <button
               type="button"
               onClick={onConfirm}
               className="rounded-lg bg-[var(--color-emphasis)] px-7 py-3 text-base font-black text-[var(--color-emphasis-contrast)] transition hover:scale-[1.02]"
             >
-              Confirm
+              {isLoggedIn ? "View Leaderboard" : "Confirm"}
             </button>
 
-            <button
-              type="button"
-              onClick={onBackHome}
-              className="rounded-lg border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] px-7 py-3 text-base font-black text-[var(--color-text-primary)] transition hover:border-[var(--color-emphasis)] hover:text-[var(--color-emphasis)]"
-            >
-              Back to Home Page
-            </button>
+            {!isLoggedIn && (
+              <button
+                type="button"
+                onClick={onBackHome}
+                className="rounded-lg border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] px-7 py-3 text-base font-black text-[var(--color-text-primary)] transition hover:border-[var(--color-emphasis)] hover:text-[var(--color-emphasis)]"
+              >
+                Home
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -249,8 +258,10 @@ function GameCompleteModal({
 
 function GamePage({
   difficultyIndex,
+  currentUser,
   onBackHome,
   onOpenAuthModal,
+  onViewLeaderboard,
 }: GamePageProps) {
   const difficultyName = difficultyNames[difficultyIndex] ?? "Easy";
 
@@ -262,6 +273,9 @@ function GamePage({
 
   const [selectedRotationStep, setSelectedRotationStep] =
     useState<RotationStep>(90);
+
+  const [selectedAxis, setSelectedAxis] = useState<Axis | null>(null);
+  const [hoveredAxis, setHoveredAxis] = useState<Axis | null>(null);
 
   const [currentProgressStep, setCurrentProgressStep] = useState(1);
 
@@ -287,6 +301,8 @@ function GamePage({
       setIsLoadingPuzzle(true);
       setPuzzleError("");
       setIsSolved(false);
+      setSelectedAxis(null);
+      setHoveredAxis(null);
       setBlockOrientation(identityOrientation);
 
       let validPuzzle: PuzzleDto | null = null;
@@ -327,6 +343,8 @@ function GamePage({
     setIsGameComplete(false);
     setIsSolved(false);
     setSelectedRotationStep(90);
+    setSelectedAxis(null);
+    setHoveredAxis(null);
     setBlockOrientation(identityOrientation);
 
     loadPuzzle();
@@ -385,6 +403,8 @@ function GamePage({
   function handleRotate(axis: Axis) {
     if (!puzzle || isLoadingPuzzle || isSolved || isGameComplete) return;
 
+    setSelectedAxis(axis);
+
     const nextOrientation = getNextOrientation(
       blockOrientation,
       axis,
@@ -405,75 +425,100 @@ function GamePage({
   }
 
   function handleReset() {
+    if (isSolved || isGameComplete) return;
+
     if (solveTimeoutRef.current !== null) {
       window.clearTimeout(solveTimeoutRef.current);
       solveTimeoutRef.current = null;
     }
 
-    timerStartRef.current = performance.now();
-    setElapsedMilliseconds(0);
-    setFinalElapsedMilliseconds(null);
-    setSelectedRotationStep(90);
     setBlockOrientation(identityOrientation);
-    setIsSolved(false);
-
-    if (isGameComplete) {
-      setCurrentProgressStep(1);
-      setIsGameComplete(false);
-      loadPuzzle();
-    }
+    setSelectedAxis(null);
+    setHoveredAxis(null);
   }
 
   function handleConfirmScore() {
     if (finalElapsedMilliseconds === null) return;
 
-    onOpenAuthModal({
+    const score = {
       difficultyName,
       elapsedMilliseconds: finalElapsedMilliseconds,
       formattedTime: formatTime(finalElapsedMilliseconds),
-    });
+    };
+
+    if (currentUser) {
+      onViewLeaderboard(score);
+      return;
+    }
+
+    onOpenAuthModal(score);
   }
 
+  const highlightedAxis = hoveredAxis ?? selectedAxis;
+
+  const stepsLeft = Math.max(
+    totalProgressSteps -
+      currentProgressStep +
+      (isSolved || isGameComplete ? 0 : 1),
+    0
+  );
+
   return (
-    <section className="relative z-10 h-[calc(100vh-56px)] overflow-hidden px-8 py-6">
-      <div className="grid h-full grid-cols-[260px_minmax(0,1fr)_220px] gap-7">
-        <aside className="flex h-full min-h-0 flex-col">
-          <p className="text-2xl font-black text-[var(--color-text-primary)]">
+    <section className="relative z-10 min-h-[calc(100vh-56px)] overflow-y-auto px-4 py-5 lg:h-[calc(100vh-56px)] lg:overflow-hidden lg:px-8 lg:py-6">
+      <div className="grid min-h-full grid-cols-1 gap-6 lg:h-full lg:grid-cols-[260px_minmax(0,1fr)_220px] lg:gap-7">
+        <aside className="order-1 grid grid-cols-[132px_minmax(0,1fr)] items-start gap-x-4 sm:grid-cols-[160px_minmax(0,1fr)] lg:order-none lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:items-stretch lg:gap-x-0">
+          <p className="col-span-2 mb-4 text-lg font-black text-[var(--color-text-primary)] lg:mb-0 lg:text-2xl">
             Level:{" "}
             <span className="text-[var(--color-emphasis)]">
               {difficultyName}
             </span>
           </p>
 
-          <p className="mt-8 text-sm font-black uppercase tracking-[0.24em] text-[var(--color-text-primary)]">
-            Target
-          </p>
+          <div className="min-w-0 lg:contents">
+            <p className="text-center text-[10px] font-black uppercase tracking-[0.24em] text-[var(--color-text-primary)] lg:mt-8 lg:text-left lg:text-sm">
+              Target
+            </p>
 
-          <div className="mt-4 flex aspect-square w-[240px] items-center justify-center rounded-[28px] border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)]">
-            {isLoadingPuzzle && (
-              <p className="text-sm font-bold opacity-60">Loading...</p>
-            )}
+            <div className="mt-3 flex aspect-square w-full items-center justify-center rounded-[22px] border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] lg:mt-4 lg:w-[240px] lg:rounded-[28px]">
+              {isLoadingPuzzle && (
+                <p className="text-sm font-bold opacity-60">Loading...</p>
+              )}
 
-            {!isLoadingPuzzle && puzzleError && (
-              <p className="px-4 text-center text-sm font-bold text-[var(--color-emphasis)]">
-                {puzzleError}
-              </p>
-            )}
+              {!isLoadingPuzzle && puzzleError && (
+                <p className="px-4 text-center text-sm font-bold text-[var(--color-emphasis)]">
+                  {puzzleError}
+                </p>
+              )}
 
-            {!isLoadingPuzzle && puzzle && (
-              <PuzzleBlockCanvas
-                key={`target-${currentProgressStep}-${puzzle.id}`}
-                cubes={puzzle.cubes}
-                orientation={puzzle.targetOrientation}
-                size="target"
-              />
-            )}
+              {!isLoadingPuzzle && puzzle && (
+                <PuzzleBlockCanvas
+                  key={`target-${currentProgressStep}-${puzzle.id}`}
+                  cubes={puzzle.cubes}
+                  orientation={puzzle.targetOrientation}
+                  size="target"
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="flex min-w-0 flex-col items-center justify-center pt-8 text-center lg:hidden">
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[var(--color-text-primary)]">
+              Time Elapsed
+            </p>
+
+            <p className="mt-2 text-2xl font-black text-[var(--color-emphasis)]">
+              {formatTime(elapsedMilliseconds)}
+            </p>
+
+            <p className="mt-2 text-[10px] font-bold text-[var(--color-text-primary)] opacity-70">
+              {stepsLeft} steps left
+            </p>
           </div>
         </aside>
 
-        <main className="flex h-full min-h-0 flex-col gap-5">
+        <main className="order-2 flex min-h-0 flex-col gap-4 lg:order-none lg:h-full lg:gap-5">
           <div
-            className={`mx-auto flex aspect-square w-[min(36vw,430px)] items-center justify-center rounded-[32px] border transition-colors duration-200 ${
+            className={`mx-auto flex aspect-square w-full max-w-[330px] items-center justify-center rounded-[28px] border transition-colors duration-200 lg:w-[min(36vw,430px)] lg:max-w-none lg:rounded-[32px] ${
               isSolved
                 ? "border-4 border-green-300 bg-green-400/45 ring-4 ring-green-300/80"
                 : "border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)]"
@@ -498,13 +543,13 @@ function GamePage({
             )}
           </div>
 
-          <div className="px-5 py-3">
+          <div className="px-0 py-2 lg:px-5 lg:py-3">
             <p className="text-center text-xs font-black uppercase tracking-[0.24em] text-[var(--color-emphasis)]">
-              Rotation Control
+              Rotation Step
             </p>
 
             <div className="mt-4 flex flex-col items-center gap-3">
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center justify-center gap-2 lg:gap-3">
                 {([-90, -45, 45, 90] as RotationStep[]).map((step) => {
                   const isActive = selectedRotationStep === step;
 
@@ -514,7 +559,7 @@ function GamePage({
                       type="button"
                       disabled={isLoadingPuzzle || isSolved || isGameComplete}
                       onClick={() => setSelectedRotationStep(step)}
-                      className={`min-w-[78px] rounded-xl border px-4 py-2 text-base font-black transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                      className={`min-w-[56px] rounded-xl border px-3 py-2 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-40 lg:min-w-[78px] lg:px-4 lg:text-base ${
                         isActive
                           ? "border-[var(--color-emphasis)] bg-[var(--color-emphasis)] text-[var(--color-emphasis-contrast)]"
                           : "border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] text-[var(--color-text-primary)] hover:border-[var(--color-emphasis)] hover:text-[var(--color-emphasis)]"
@@ -526,19 +571,36 @@ function GamePage({
                 })}
               </div>
 
-              {/* axis buttons */}
-              <div className="flex items-center justify-center gap-3">
-                {(["X", "Y", "Z"] as Axis[]).map((axis) => (
-                  <button
-                    key={axis}
-                    type="button"
-                    disabled={isLoadingPuzzle || isSolved || isGameComplete}
-                    onClick={() => handleRotate(axis)}
-                    className="min-w-[102px] rounded-xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] px-4 py-2 text-base font-black text-[var(--color-text-primary)] transition hover:border-[var(--color-emphasis)] hover:bg-[var(--color-emphasis)] hover:text-[var(--color-emphasis-contrast)] disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    Rotate {axis}
-                  </button>
-                ))}
+              <div className="flex items-center justify-center gap-2 lg:gap-3">
+                {(["X", "Y", "Z"] as Axis[]).map((axis) => {
+                  const isHighlightedAxis = highlightedAxis === axis;
+
+                  return (
+                    <button
+                      key={axis}
+                      type="button"
+                      disabled={isLoadingPuzzle || isSolved || isGameComplete}
+                      onPointerEnter={(event) => {
+                        if (event.pointerType === "mouse") {
+                          setHoveredAxis(axis);
+                        }
+                      }}
+                      onPointerLeave={(event) => {
+                        if (event.pointerType === "mouse") {
+                          setHoveredAxis(null);
+                        }
+                      }}
+                      onClick={() => handleRotate(axis)}
+                      className={`min-w-[88px] rounded-xl border px-3 py-2 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-40 lg:min-w-[102px] lg:px-4 lg:text-base ${
+                        isHighlightedAxis
+                          ? "border-[var(--color-emphasis)] bg-[var(--color-emphasis)] text-[var(--color-emphasis-contrast)]"
+                          : "border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] text-[var(--color-text-primary)]"
+                      }`}
+                    >
+                      Rotate {axis}
+                    </button>
+                  );
+                })}
               </div>
 
               {isSolved && (
@@ -556,8 +618,8 @@ function GamePage({
           </div>
         </main>
 
-        <aside className="flex h-full min-h-0 flex-col gap-4">
-          <div className="px-2 py-2">
+        <aside className="order-3 flex min-h-0 flex-col items-center gap-5 pb-8 lg:order-none lg:h-full lg:items-stretch lg:gap-4 lg:pb-0">
+          <div className="hidden px-2 py-2 lg:block">
             <p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--color-emphasis)]">
               Time Elapsed
             </p>
@@ -567,9 +629,9 @@ function GamePage({
             </p>
           </div>
 
-          <div className="px-2 py-2">
-            <div className="ml-1 w-[98px]">
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--color-emphasis)]">
+          <div className="w-full px-2 py-2 lg:w-auto">
+            <div className="mx-auto w-fit lg:ml-1 lg:w-[98px]">
+              <p className="text-center text-xs font-black uppercase tracking-[0.24em] text-[var(--color-emphasis)] lg:text-left">
                 Progress
               </p>
 
@@ -597,6 +659,7 @@ function GamePage({
       {isGameComplete && finalElapsedMilliseconds !== null && (
         <GameCompleteModal
           finalTime={finalElapsedMilliseconds}
+          isLoggedIn={currentUser !== null}
           onConfirm={handleConfirmScore}
           onBackHome={onBackHome}
         />

@@ -1,43 +1,26 @@
-import { useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, type ThreeEvent } from "@react-three/fiber";
-import { BoxGeometry, EdgesGeometry, MathUtils, Vector3 } from "three";
+import { useMemo, useRef } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { BoxGeometry, EdgesGeometry, MathUtils, Vector3, Euler, Quaternion } from "three";
 import type { Group } from "three";
 
-//a cube position in 3D space: [x, y, z]
 type CubePosition = [number, number, number];
 
-//each block instance has its own position, rotation, and scale
-//all three blocks have the same shape, but different transforms
 type BlockTransform = {
   position: [number, number, number];
   rotation: [number, number, number];
   scale: number;
 };
 
-
-type BlockInstanceProps = {
-  initialTransformIndex: number;
-};
-
-// Base block shape, made of 7 cubes:
-//
-// X
-// X
-// X X X X
-//       X
 const baseBlockShape: CubePosition[] = [
   [0, 2, 0],
   [0, 1, 0],
   [0, 0, 0],
-
   [1, 0, 0],
   [2, 0, 0],
   [3, 0, 0],
-
   [3, -1, 0],
 ];
 
-// When the player clicks a block, it moves to the next transform.
 const blockTransforms: BlockTransform[] = [
   {
     position: [-1.35, 1.85, 0],
@@ -68,13 +51,9 @@ const blockTransforms: BlockTransform[] = [
   },
 ];
 
-// Shared cube geometry.
-// This avoids creating a new BoxGeometry for every single cube.
 const boxGeometry = new BoxGeometry(1, 1, 1);
 const edgeGeometry = new EdgesGeometry(boxGeometry);
 
-// Without this, the block rotates around one corner/end.
-// After centering, the block rotates around its own centre.
 function getCenteredCubes(cubes: CubePosition[]): CubePosition[] {
   const xs = cubes.map((cube) => cube[0]);
   const ys = cubes.map((cube) => cube[1]);
@@ -84,14 +63,9 @@ function getCenteredCubes(cubes: CubePosition[]): CubePosition[] {
   const centerY = (Math.min(...ys) + Math.max(...ys)) / 2;
   const centerZ = (Math.min(...zs) + Math.max(...zs)) / 2;
 
-  return cubes.map(([x, y, z]) => [
-    x - centerX,
-    y - centerY,
-    z - centerZ,
-  ]);
+  return cubes.map(([x, y, z]) => [x - centerX, y - centerY, z - centerZ]);
 }
 
-// Renders one cube with a light blue fill and white outline.
 function Cube({ position }: { position: CubePosition }) {
   return (
     <group position={position}>
@@ -102,119 +76,73 @@ function Cube({ position }: { position: CubePosition }) {
           metalness={0.02}
           emissive="#00aee6"
           emissiveIntensity={0.08}
+          side={2}
         />
       </mesh>
 
-      <lineSegments geometry={edgeGeometry}>
+      <lineSegments geometry={edgeGeometry} raycast={() => null}>
         <lineBasicMaterial color="#ffffff" />
       </lineSegments>
     </group>
   );
 }
 
-// Renders one full block.
-// All blocks use the same baseBlockShape, but each starts from a different transform.
-function BlockInstance({ initialTransformIndex }: BlockInstanceProps) {
+type BlockInstanceProps = {
+  index: number;
+  transform: BlockTransform;
+};
+
+function BlockInstance({ index, transform }: BlockInstanceProps) {
   const groupRef = useRef<Group>(null);
-  const [transformIndex, setTransformIndex] = useState(initialTransformIndex);
-
   const centeredCubes = useMemo(() => getCenteredCubes(baseBlockShape), []);
-  const targetTransform = blockTransforms[transformIndex];
+  const tmpPos = useRef(new Vector3());
+  const tmpScale = useRef(new Vector3());
+  const tmpEuler = useRef(new Euler());
+  const tmpQuat = useRef(new Quaternion());
 
-  useFrame(({ clock }) => {
+  useFrame((state, delta) => {
     if (!groupRef.current) return;
 
-    const group = groupRef.current;
-    const time = clock.getElapsedTime();
+    const time = state.clock.getElapsedTime();
+    const floatingRotation = Math.sin(time * 1.4 + index * 0.8) * 0.035;
+    const floatingY = Math.sin(time * 1.2 + index * 0.9) * 0.08;
+    const damping = 8;
+    const t = 1 - Math.exp(-damping * Math.max(0, delta));
 
-    const floatingRotation =
-      Math.sin(time * 1.4 + initialTransformIndex * 0.8) * 0.035;
-
-    const floatingY =
-      Math.sin(time * 1.2 + initialTransformIndex * 0.9) * 0.08;
-
-    group.position.lerp(
-      new Vector3(
-        targetTransform.position[0],
-        targetTransform.position[1] + floatingY,
-        targetTransform.position[2]
-      ),
-      0.08
+    tmpPos.current.set(transform.position[0], transform.position[1] + floatingY, transform.position[2]);
+    tmpScale.current.set(transform.scale, transform.scale, transform.scale);
+    tmpEuler.current.set(
+      transform.rotation[0] + floatingRotation,
+      transform.rotation[1] + floatingRotation,
+      transform.rotation[2] + floatingRotation
     );
+    tmpQuat.current.setFromEuler(tmpEuler.current);
 
-    group.rotation.x = MathUtils.lerp(
-      group.rotation.x,
-      targetTransform.rotation[0] + floatingRotation,
-      0.08
-    );
-
-    group.rotation.y = MathUtils.lerp(
-      group.rotation.y,
-      targetTransform.rotation[1] + floatingRotation,
-      0.08
-    );
-
-    group.rotation.z = MathUtils.lerp(
-      group.rotation.z,
-      targetTransform.rotation[2],
-      0.08
-    );
-
-    group.scale.lerp(
-      new Vector3(
-        targetTransform.scale,
-        targetTransform.scale,
-        targetTransform.scale
-      ),
-      0.08
-    );
+    groupRef.current.position.lerp(tmpPos.current, t);
+    groupRef.current.scale.lerp(tmpScale.current, t);
+    groupRef.current.quaternion.slerp(tmpQuat.current, t);
   });
 
-  function handleClick(event: ThreeEvent<MouseEvent>) {
-    event.stopPropagation();
-
-    setTransformIndex((currentIndex) => {
-      return (currentIndex + 1) % blockTransforms.length;
-    });
-  }
-
   return (
-    <group
-      ref={groupRef}
-      position={blockTransforms[initialTransformIndex].position}
-      rotation={blockTransforms[initialTransformIndex].rotation}
-      scale={blockTransforms[initialTransformIndex].scale}
-      onClick={handleClick}
-    >
-      {centeredCubes.map((cubePosition, index) => (
-        <Cube key={index} position={cubePosition} />
+    <group ref={groupRef} position={transform.position} rotation={transform.rotation} scale={transform.scale}>
+      {centeredCubes.map((cubePosition, cubeIndex) => (
+        <Cube key={cubeIndex} position={cubePosition} />
       ))}
     </group>
   );
 }
 
-// Creates the Three.js area on the homepage.
-// It contains the camera, lights, and three copies of the same block.
 function HomeBlocks() {
   return (
     <div className="absolute inset-y-0 right-0 z-0 hidden w-[55%] sm:block">
-      <Canvas
-        orthographic
-        shadows
-        camera={{
-          position: [5, 5, 5],
-          zoom: 78,
-        }}
-        className="cursor-pointer"
-      >
+      <Canvas orthographic shadows camera={{ position: [5, 5, 5], zoom: 78 }} className="pointer-events-none">
         <ambientLight intensity={1.45} />
-
         <directionalLight position={[5, 8, 6]} intensity={2.2} castShadow />
         <directionalLight position={[-4, 3, 5]} intensity={0.9} />
 
-        <BlockInstance initialTransformIndex={0} />
-        <BlockInstance initialTransformIndex={1} />
-        <BlockInstance initialTransformIndex={2} />
+        <BlockInstance index={0} transform={blockTransforms[0]} />
+        <BlockInstance index={1} transform={blockTransforms[1]} />
+        <BlockInstance index={2} transform={blockTransforms[2]} />
       </Canvas>
     </div>
   );

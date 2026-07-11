@@ -1,6 +1,6 @@
 import { useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { BoxGeometry, EdgesGeometry, MathUtils, Quaternion } from "three";
+import { BoxGeometry, EdgesGeometry, Quaternion } from "three";
 import type { Group } from "three";
 import type { CubeDto } from "../types/puzzle";
 
