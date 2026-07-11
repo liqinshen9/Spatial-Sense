@@ -26,6 +26,9 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [shouldShake, setShouldShake] = useState(false);
+
   const title = mode === "login" ? "Welcome Back" : "Join Spatial Sense";
 
   const helperText = useMemo(() => {
@@ -35,6 +38,41 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
       mode === "login" ? "Log in" : "Create an account"
     } to save your score.`;
   }, [mode, pendingScore]);
+
+  const loginUsernameMissing =
+    hasSubmitted && mode === "login" && usernameOrEmail.trim().length === 0;
+
+  const loginPasswordMissing =
+    hasSubmitted && mode === "login" && loginPassword.trim().length === 0;
+
+  const registerNameMissing =
+    hasSubmitted && mode === "register" && name.trim().length === 0;
+
+  const registerEmailMissing =
+    hasSubmitted && mode === "register" && registerEmail.trim().length === 0;
+
+  const registerPasswordMissing =
+    hasSubmitted && mode === "register" && registerPassword.trim().length === 0;
+
+  const confirmPasswordMissing =
+    hasSubmitted && mode === "register" && confirmPassword.trim().length === 0;
+
+  function triggerError(errorMessage: string) {
+    setMessage(errorMessage);
+    setShouldShake(false);
+
+    window.setTimeout(() => {
+      setShouldShake(true);
+    }, 10);
+  }
+
+  function getInputClass(hasError: boolean) {
+    return `mt-3 w-full rounded-xl border ${
+      hasError
+        ? "border-red-500"
+        : "border-[var(--color-nav-border)]"
+    } bg-[var(--color-leaderboard-row)] px-4 py-3 text-base font-bold text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-primary)] placeholder:opacity-45 focus:border-[var(--color-emphasis)]`;
+  }
 
   function switchToRegister() {
     const value = usernameOrEmail.trim();
@@ -46,23 +84,37 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
     }
 
     setMessage("");
+    setHasSubmitted(false);
+    setShouldShake(false);
     setMode("register");
   }
 
   function switchToLogin() {
     setMessage("");
+    setHasSubmitted(false);
+    setShouldShake(false);
     setMode("login");
   }
 
   async function handleLoginSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    setHasSubmitted(true);
+
+    if (
+      usernameOrEmail.trim().length === 0 ||
+      loginPassword.trim().length === 0
+    ) {
+      triggerError("Please enter your username/email and password.");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       setMessage("");
 
       const user = await loginUser({
-        usernameOrEmail,
+        usernameOrEmail: usernameOrEmail.trim(),
         password: loginPassword,
       });
 
@@ -72,52 +124,76 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
 
       if (apiError.status === 404) {
         switchToRegister();
-        setMessage("User not found. Please register first.");
+        triggerError("User not found. Please register first.");
         return;
       }
 
-      setMessage(apiError.message || "Login failed.");
+      triggerError(apiError.message || "Login failed.");
     } finally {
       setIsSubmitting(false);
     }
   }
 
   async function handleRegisterSubmit(event: FormEvent<HTMLFormElement>) {
-  event.preventDefault();
+    event.preventDefault();
 
-  if (registerPassword !== confirmPassword) {
-    setMessage("Passwords do not match.");
-    return;
+    setHasSubmitted(true);
+
+    if (
+      name.trim().length === 0 ||
+      registerEmail.trim().length === 0 ||
+      registerPassword.trim().length === 0 ||
+      confirmPassword.trim().length === 0
+    ) {
+      triggerError("Please complete all sign up fields.");
+      return;
+    }
+
+    if (registerPassword !== confirmPassword) {
+      triggerError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setMessage("");
+
+      await registerUser({
+        name: name.trim(),
+        email: registerEmail.trim(),
+        password: registerPassword,
+      });
+
+      setUsernameOrEmail(registerEmail.trim());
+      setLoginPassword("");
+      setName("");
+      setRegisterEmail("");
+      setRegisterPassword("");
+      setConfirmPassword("");
+
+      setMode("login");
+      setHasSubmitted(false);
+      setShouldShake(false);
+      setMessage("Account created. Please log in to save your score.");
+    } catch (error) {
+      const apiError = error as ApiError;
+      triggerError(apiError.message || "Sign up failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
-
-  try {
-    setIsSubmitting(true);
-    setMessage("");
-
-    await registerUser({
-      name,
-      email: registerEmail,
-      password: registerPassword,
-    });
-
-    setUsernameOrEmail(registerEmail);
-    setLoginPassword("");
-    setRegisterPassword("");
-    setConfirmPassword("");
-
-    setMode("login");
-    setMessage("Account created. Please log in to save your score.");
-  } catch (error) {
-    const apiError = error as ApiError;
-    setMessage(apiError.message || "Sign up failed.");
-  } finally {
-    setIsSubmitting(false);
-  }
-}
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[var(--color-nav-bg)] px-5 backdrop-blur-sm">
-      <div className="game-complete-card relative w-full max-w-[430px] rounded-[28px] border border-[var(--color-nav-border)] p-7 shadow-2xl sm:max-w-[720px] sm:p-8">
+      <div
+        onAnimationEnd={() => setShouldShake(false)}
+        style={
+          shouldShake
+            ? { animation: "difficulty-shake 0.38s ease-in-out" }
+            : undefined
+        }
+        className="game-complete-card relative w-full max-w-[430px] rounded-[28px] border border-[var(--color-nav-border)] p-7 shadow-2xl sm:max-w-[720px] sm:p-8"
+      >
         <button
           type="button"
           onClick={onClose}
@@ -146,7 +222,7 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
         )}
 
         {mode === "login" ? (
-          <form onSubmit={handleLoginSubmit} className="mt-7 space-y-5">
+          <form onSubmit={handleLoginSubmit} noValidate className="mt-7 space-y-5">
             <label className="block">
               <span className="text-sm font-black text-[var(--color-text-primary)]">
                 Username or Email
@@ -157,7 +233,7 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
                 onChange={(event) => setUsernameOrEmail(event.target.value)}
                 type="text"
                 placeholder="Enter your username or email"
-                className="mt-3 w-full rounded-xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] px-4 py-3 text-base font-bold text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-primary)] placeholder:opacity-45 focus:border-[var(--color-emphasis)]"
+                className={getInputClass(loginUsernameMissing)}
               />
             </label>
 
@@ -171,7 +247,7 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
                 onChange={(event) => setLoginPassword(event.target.value)}
                 type="password"
                 placeholder="Enter your password"
-                className="mt-3 w-full rounded-xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] px-4 py-3 text-base font-bold text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-primary)] placeholder:opacity-45 focus:border-[var(--color-emphasis)]"
+                className={getInputClass(loginPasswordMissing)}
               />
             </label>
 
@@ -195,7 +271,11 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
             </div>
           </form>
         ) : (
-          <form onSubmit={handleRegisterSubmit} className="mt-7 space-y-5">
+          <form
+            onSubmit={handleRegisterSubmit}
+            noValidate
+            className="mt-7 space-y-5"
+          >
             <label className="block">
               <span className="text-sm font-black text-[var(--color-text-primary)]">
                 Username
@@ -206,7 +286,7 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
                 onChange={(event) => setName(event.target.value)}
                 type="text"
                 placeholder="Choose a username"
-                className="mt-3 w-full rounded-xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] px-4 py-3 text-base font-bold text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-primary)] placeholder:opacity-45 focus:border-[var(--color-emphasis)]"
+                className={getInputClass(registerNameMissing)}
               />
             </label>
 
@@ -220,7 +300,7 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
                 onChange={(event) => setRegisterEmail(event.target.value)}
                 type="email"
                 placeholder="Enter your email"
-                className="mt-3 w-full rounded-xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] px-4 py-3 text-base font-bold text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-primary)] placeholder:opacity-45 focus:border-[var(--color-emphasis)]"
+                className={getInputClass(registerEmailMissing)}
               />
             </label>
 
@@ -234,7 +314,7 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
                 onChange={(event) => setRegisterPassword(event.target.value)}
                 type="password"
                 placeholder="Create a password"
-                className="mt-3 w-full rounded-xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] px-4 py-3 text-base font-bold text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-primary)] placeholder:opacity-45 focus:border-[var(--color-emphasis)]"
+                className={getInputClass(registerPasswordMissing)}
               />
             </label>
 
@@ -248,7 +328,7 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 type="password"
                 placeholder="Confirm your password"
-                className="mt-3 w-full rounded-xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] px-4 py-3 text-base font-bold text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-primary)] placeholder:opacity-45 focus:border-[var(--color-emphasis)]"
+                className={getInputClass(confirmPasswordMissing)}
               />
             </label>
 
