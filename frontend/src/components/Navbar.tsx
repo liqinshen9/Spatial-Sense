@@ -8,6 +8,7 @@ type NavbarProps = {
   onToggleTheme: () => void;
   onLoginClick: () => void;
   onLogout: () => void;
+  onNavigateRequest: (path: string) => void;
 };
 
 function Navbar({
@@ -16,6 +17,7 @@ function Navbar({
   onToggleTheme,
   onLoginClick,
   onLogout,
+  onNavigateRequest,
 }: NavbarProps) {
   function getNavClass({ isActive }: { isActive: boolean }) {
     return isActive
@@ -47,11 +49,25 @@ function Navbar({
           )}
         </button>
 
-        <NavLink to="/" end className={getNavClass}>
+        <NavLink
+          to="/"
+          onClick={(event) => {
+            event.preventDefault();
+            onNavigateRequest("/");
+          }}
+          className={getNavClass}
+        >
           Home
         </NavLink>
 
-        <NavLink to="/leaderboard" className={getNavClass}>
+        <NavLink
+          to="/leaderboard"
+          onClick={(event) => {
+            event.preventDefault();
+            onNavigateRequest("/leaderboard");
+          }}
+          className={getNavClass}
+        >
           Leaderboard
         </NavLink>
       </div>

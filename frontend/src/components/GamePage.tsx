@@ -17,6 +17,7 @@ type GamePageProps = {
   onBackHome: () => void;
   onOpenAuthModal: (score: CompletedScore) => void;
   onViewLeaderboard: (score: CompletedScore) => void | Promise<void>;
+  onGameProgressChange: (shouldWarn: boolean) => void;
 };
 
 type Axis = "X" | "Y" | "Z";
@@ -262,6 +263,7 @@ function GamePage({
   onBackHome,
   onOpenAuthModal,
   onViewLeaderboard,
+  onGameProgressChange,
 }: GamePageProps) {
   const difficultyName = difficultyNames[difficultyIndex] ?? "Easy";
 
@@ -333,6 +335,14 @@ function GamePage({
       setIsLoadingPuzzle(false);
     }
   }, [difficultyName]);
+
+  useEffect(() => {
+  onGameProgressChange(!isGameComplete);
+
+    return () => {
+      onGameProgressChange(false);
+    };
+  }, [isGameComplete, onGameProgressChange]);
 
   useEffect(() => {
     timerStartRef.current = performance.now();
