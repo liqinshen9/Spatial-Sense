@@ -28,18 +28,20 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Username/email and password are required." });
         }
 
-        var identifier = request.UsernameOrEmail.Trim().ToLower();
+        var identifier = request.UsernameOrEmail.Trim();
 
-        var user = await _context.Users.FirstOrDefaultAsync(user =>
-            user.Email.ToLower() == identifier ||
-            user.Name.ToLower() == identifier
-        );
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(user =>
+                user.Email == identifier ||
+                user.Name == identifier
+            );
 
         if (user is null)
         {
             return NotFound(new
             {
-                message = "This user does not exist. Please sign up first.",
+                message = "User not found. Please register first.",
                 needsRegistration = true
             });
         }

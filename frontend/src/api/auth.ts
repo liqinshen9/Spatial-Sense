@@ -19,21 +19,37 @@ export type ApiError = Error & {
 };
 
 async function createApiError(response: Response): Promise<ApiError> {
-  let data: unknown = null;
+  const contentType = response.headers.get("content-type") ?? "";
 
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
+  let data: unknown = null;
+  let message = "Request failed.";
+
+  if (contentType.includes("application/json")) {
+    try {
+      data = await response.json();
+
+      if (
+        typeof data === "object" &&
+        data !== null &&
+        "message" in data &&
+        typeof (data as { message: unknown }).message === "string"
+      ) {
+        message = (data as { message: string }).message;
+      }
+    } catch {
+      message = "Request failed.";
+    }
+  } else {
+    const text = await response.text();
+
+    if (text.trim().length > 0 && response.status !== 500) {
+      message = text;
+    }
   }
 
-  const message =
-    typeof data === "object" &&
-    data !== null &&
-    "message" in data &&
-    typeof (data as { message: unknown }).message === "string"
-      ? (data as { message: string }).message
-      : "Request failed.";
+  if (response.status === 404) {
+    message = "User not found. Please register first.";
+  }
 
   const error = new Error(message) as ApiError;
   error.status = response.status;
