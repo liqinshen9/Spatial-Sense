@@ -74,7 +74,7 @@ function Navbar({
 
       {currentUser ? (
         <div className="flex shrink-0 items-center gap-2">
-          <p className="hidden text-sm font-bold text-[var(--color-text-primary)] sm:block">
+          <p className="hidden text-sm pr-4 font-bold text-[var(--color-text-primary)] sm:block">
             Hello,{" "}
             <span className="text-[var(--color-emphasis)]">
               {currentUser.name}
@@ -84,7 +84,7 @@ function Navbar({
           <button
             type="button"
             onClick={onLogout}
-            className="rounded-lg border border-[var(--color-nav-border)] px-2.5 py-1.5 text-xs font-bold text-[var(--color-text-primary)] transition hover:border-[var(--color-emphasis)] hover:text-[var(--color-emphasis)] sm:px-4 sm:py-2 sm:text-sm"
+            className="rounded-lg border border-[var(--color-emphasis)] bg-[var(--color-emphasis)] px-2.5 py-1.5 text-xs font-bold text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)] hover:border-[var(--color-emphasis-hover)] sm:px-4 sm:py-2 sm:text-sm"
           >
             Logout
           </button>

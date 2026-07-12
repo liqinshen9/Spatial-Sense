@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getScoresByDifficulty } from "../api/scores";
 import type { Difficulty, ScoreRanking } from "../types/score";
 import type { AuthUser } from "../types/auth";
@@ -23,6 +23,7 @@ function normalizeDifficulty(value: string | null): Difficulty {
 }
 
 function LeaderboardPage({ currentUser }: LeaderboardPageProps) {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const selectedDifficulty = normalizeDifficulty(searchParams.get("difficulty"));
@@ -60,25 +61,37 @@ function LeaderboardPage({ currentUser }: LeaderboardPageProps) {
   return (
     <section className="relative z-10 min-h-[calc(100vh-56px)] px-4 py-6 sm:px-12 sm:py-10">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-6 flex w-full rounded-2xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] p-1.5 backdrop-blur-md sm:mb-8 sm:w-fit sm:p-2">
-          {difficultyOptions.map((difficulty) => {
-            const isActive = selectedDifficulty === difficulty.value;
+        <div className="mb-6 flex w-full items-center justify-between gap-3 sm:mb-8">
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="shrink-0 rounded-xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--color-text-primary)] transition hover:border-[var(--color-emphasis)] hover:text-[var(--color-emphasis)] sm:px-5 sm:py-2.5 sm:text-sm sm:tracking-[0.14em]"
+          >
+            ← <span className="hidden sm:inline">Back </span>Home
+          </button>
 
-            return (
-              <button
-                key={difficulty.value}
-                type="button"
-                onClick={() => handleDifficultyChange(difficulty.value)}
-                className={`flex-1 rounded-xl px-2 py-3 text-[10px] font-black uppercase tracking-[0.12em] transition sm:flex-none sm:px-8 sm:text-sm sm:tracking-[0.18em] ${
-                  isActive
-                    ? "bg-[var(--color-emphasis)] text-[var(--color-emphasis-contrast)]"
-                    : "text-[var(--color-text-primary)] opacity-70 hover:opacity-100"
-                }`}
-              >
-                {difficulty.label}
-              </button>
-            );
-          })}
+          <div className="flex min-w-0 flex-1 justify-end">
+            <div className="flex w-full max-w-[520px] rounded-2xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] p-1.5 backdrop-blur-md sm:w-fit sm:p-2">
+              {difficultyOptions.map((difficulty) => {
+                const isActive = selectedDifficulty === difficulty.value;
+
+                return (
+                  <button
+                    key={difficulty.value}
+                    type="button"
+                    onClick={() => handleDifficultyChange(difficulty.value)}
+                    className={`flex-1 rounded-xl px-2 py-3 text-[10px] font-black uppercase tracking-[0.12em] transition sm:flex-none sm:px-8 sm:text-sm sm:tracking-[0.18em] ${
+                      isActive
+                        ? "bg-[var(--color-emphasis)] text-[var(--color-emphasis-contrast)]"
+                        : "text-[var(--color-text-primary)] opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    {difficulty.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="overflow-hidden rounded-3xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] backdrop-blur-md">
@@ -125,7 +138,9 @@ function LeaderboardPage({ currentUser }: LeaderboardPageProps) {
                     <div
                       className={`pointer-events-none absolute inset-[2px] z-10 border-2 border-[var(--color-emphasis)] ${
                         index === 0 ? "rounded-t-[22px]" : ""
-                      } ${index === rankings.length - 1 ? "rounded-b-[22px]" : ""}`}
+                      } ${
+                        index === rankings.length - 1 ? "rounded-b-[22px]" : ""
+                      }`}
                     />
                   )}
 

@@ -7,7 +7,7 @@
   --color-nav-border: rgba(255, 255, 255, 0.2);
   --color-nav-bg: rgba(0, 27, 92, 0.55);
   --color-emphasis: #fffa17;
-  --color-emphasis-hover: #ffb84d;
+  --color-emphasis-hover: hsl(72, 100%, 65%);
   --color-emphasis-contrast: #001b5c;
   --color-surface-alt: #fbe6a0;
   --color-surface-alt-text: #002fa5;
