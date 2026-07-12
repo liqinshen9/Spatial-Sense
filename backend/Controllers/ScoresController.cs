@@ -76,7 +76,7 @@ public class ScoresController : ControllerBase
         var rankings = await GetRankings(difficulty);
 
         var savedScore = rankings.FirstOrDefault(score =>
-            score.Username.Equals(user.Name, StringComparison.OrdinalIgnoreCase)
+            score.UserId == user.Id
         );
 
         if (savedScore is null)
@@ -116,7 +116,7 @@ public class ScoresController : ControllerBase
             .ToListAsync();
 
         var bestScores = scores
-            .GroupBy(score => score.User.Name.Trim().ToLower())
+            .GroupBy(score => score.UserId)
             .Select(group => group
                 .OrderBy(score => score.ElapsedMilliseconds)
                 .ThenBy(score => score.CreatedAt)
@@ -131,6 +131,7 @@ public class ScoresController : ControllerBase
                 index + 1,
                 score.UserId,
                 score.User.Name,
+                score.User.AvatarUrl,
                 score.Difficulty,
                 score.ElapsedMilliseconds,
                 FormatTime(score.ElapsedMilliseconds),
@@ -171,6 +172,7 @@ public record ScoreResponse(
     int Rank,
     int UserId,
     string Username,
+    string? AvatarUrl,
     string Difficulty,
     int ElapsedMilliseconds,
     string Time,

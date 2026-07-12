@@ -4,8 +4,11 @@ import { getScoresByDifficulty } from "../api/scores";
 import type { Difficulty, ScoreRanking } from "../types/score";
 import type { AuthUser } from "../types/auth";
 
+const API_BASE_URL = "http://localhost:5000";
+
 type LeaderboardPageProps = {
   currentUser: AuthUser | null;
+  onOpenProfileModal: () => void;
 };
 
 const difficultyOptions: { label: string; value: Difficulty }[] = [
@@ -22,7 +25,20 @@ function normalizeDifficulty(value: string | null): Difficulty {
   return "easy";
 }
 
-function LeaderboardPage({ currentUser }: LeaderboardPageProps) {
+function getAvatarSrc(avatarUrl: string | null) {
+  if (!avatarUrl) return "";
+
+  if (avatarUrl.startsWith("http")) {
+    return avatarUrl;
+  }
+
+  return `${API_BASE_URL}${avatarUrl}`;
+}
+
+function LeaderboardPage({
+  currentUser,
+  onOpenProfileModal,
+}: LeaderboardPageProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -122,10 +138,13 @@ function LeaderboardPage({ currentUser }: LeaderboardPageProps) {
           {!isLoading &&
             !error &&
             rankings.map((player, index) => {
+              const isCurrentUser =
+                currentUser !== null && player.userId === currentUser.id;
+
               const isHighlighted =
-                currentUser !== null &&
-                player.id === highlightScoreId &&
-                player.userId === currentUser.id;
+                isCurrentUser && player.id === highlightScoreId;
+
+              const avatarSrc = getAvatarSrc(player.avatarUrl);
 
               return (
                 <div
@@ -150,9 +169,37 @@ function LeaderboardPage({ currentUser }: LeaderboardPageProps) {
                     </span>
                   </div>
 
-                  <p className="relative z-20 truncate pr-3 text-base font-black text-[var(--color-text-primary)] sm:text-xl">
-                    {player.username}
-                  </p>
+                  <div className="relative z-20 flex min-w-0 items-center gap-3 pr-3">
+                    <button
+                      type="button"
+                      onClick={isCurrentUser ? onOpenProfileModal : undefined}
+                      disabled={!isCurrentUser}
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[var(--color-emphasis)] bg-[var(--color-leaderboard-row)] text-sm font-black text-[var(--color-emphasis)] ${
+                        isCurrentUser
+                          ? "transition hover:scale-105"
+                          : "cursor-default"
+                      }`}
+                      aria-label={
+                        isCurrentUser
+                          ? "Open account settings"
+                          : `${player.username}'s avatar`
+                      }
+                    >
+                      {avatarSrc ? (
+                        <img
+                          src={avatarSrc}
+                          alt={`${player.username}'s avatar`}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        player.username.charAt(0).toUpperCase()
+                      )}
+                    </button>
+
+                    <p className="truncate text-base font-black text-[var(--color-text-primary)] sm:text-xl">
+                      {player.username}
+                    </p>
+                  </div>
 
                   <p className="relative z-20 text-right font-mono text-base font-black text-[var(--color-emphasis)] sm:text-xl">
                     {player.time}

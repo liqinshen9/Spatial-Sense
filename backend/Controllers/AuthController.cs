@@ -12,11 +12,17 @@ public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly PasswordService _passwordService;
+    private readonly AvatarStorageService _avatarStorageService;
 
-    public AuthController(AppDbContext context, PasswordService passwordService)
+    public AuthController(
+        AppDbContext context,
+        PasswordService passwordService,
+        AvatarStorageService avatarStorageService
+    )
     {
         _context = context;
         _passwordService = passwordService;
+        _avatarStorageService = avatarStorageService;
     }
 
     [HttpPost("login")]
@@ -60,7 +66,8 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<ActionResult<AuthUserResponse>> Register(RegisterRequest request)
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<AuthUserResponse>> Register([FromForm] RegisterRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name) ||
             string.IsNullOrWhiteSpace(request.Email) ||
@@ -73,7 +80,7 @@ public class AuthController : ControllerBase
         var email = request.Email.Trim().ToLower();
 
         var usernameAlreadyExists = await _context.Users.AnyAsync(user =>
-        user.Name.ToLower() == name.ToLower()
+            user.Name.ToLower() == name.ToLower()
         );
 
         if (usernameAlreadyExists)
@@ -89,11 +96,24 @@ public class AuthController : ControllerBase
         {
             return Conflict(new { message = "This email is already registered. Please log in." });
         }
+
+        string? avatarUrl;
+
+        try
+        {
+            avatarUrl = await _avatarStorageService.SaveAvatarAsync(request.Avatar);
+        }
+        catch (InvalidOperationException error)
+        {
+            return BadRequest(new { message = error.Message });
+        }
+
         var user = new User
         {
             Name = name,
             Email = email,
             PasswordHash = _passwordService.HashPassword(request.Password),
+            AvatarUrl = avatarUrl,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -109,6 +129,7 @@ public class AuthController : ControllerBase
             user.Id,
             user.Name,
             user.Email,
+            user.AvatarUrl,
             user.CreatedAt
         );
     }
@@ -116,6 +137,21 @@ public class AuthController : ControllerBase
 
 public record LoginRequest(string UsernameOrEmail, string Password);
 
-public record RegisterRequest(string Name, string Email, string Password);
+public class RegisterRequest
+{
+    public string Name { get; set; } = string.Empty;
 
-public record AuthUserResponse(int Id, string Name, string Email, DateTime CreatedAt);
+    public string Email { get; set; } = string.Empty;
+
+    public string Password { get; set; } = string.Empty;
+
+    public IFormFile? Avatar { get; set; }
+}
+
+public record AuthUserResponse(
+    int Id,
+    string Name,
+    string Email,
+    string? AvatarUrl,
+    DateTime CreatedAt
+);

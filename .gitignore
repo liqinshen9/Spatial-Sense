@@ -40,3 +40,5 @@ lerna-debug.log*
 # Local .NET settings
 **/appsettings.Development.json
 **/appsettings.Local.json
+
+backend/wwwroot/uploads/avatars/*

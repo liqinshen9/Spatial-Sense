@@ -2,6 +2,7 @@ using Backend.Data;
 using Backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Backend.Services;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,10 +27,22 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddSingleton<PuzzleService>();
 builder.Services.AddSingleton<PasswordService>();
+builder.Services.AddSingleton<AvatarStorageService>();
 
 var app = builder.Build();
 
+var webRootPath = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+var avatarFolderPath = Path.Combine(webRootPath, "uploads", "avatars");
+
+Directory.CreateDirectory(avatarFolderPath);
+
 app.UseCors("Frontend");
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(webRootPath),
+    RequestPath = ""
+});
 
 app.MapGet("/", () => "Backend is running!");
 
@@ -41,6 +54,7 @@ app.MapGet("/api/users", async (AppDbContext db) =>
             user.Id,
             user.Name,
             user.Email,
+            user.AvatarUrl,
             user.CreatedAt
         })
         .ToListAsync();

@@ -12,6 +12,7 @@ import GamePage from "./components/GamePage";
 import LeaderboardPage from "./components/Leaderboard";
 import AuthModal from "./components/AuthModel";
 import ConfirmModal from "./components/ConfirmModal";
+import ProfileModal from "./components/ProfileModal";
 import type { CompletedScore } from "./components/GamePage";
 import type { AuthUser } from "./types/auth";
 import { createScore } from "./api/scores";
@@ -27,6 +28,7 @@ function App() {
 
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [pendingScore, setPendingScore] = useState<CompletedScore | null>(null);
 
   const [shouldWarnBeforeLeavingGame, setShouldWarnBeforeLeavingGame] =
@@ -117,6 +119,7 @@ function App() {
 
   function handleLogout() {
     setCurrentUser(null);
+    setIsProfileModalOpen(false);
     localStorage.removeItem(USER_STORAGE_KEY);
 
     if (location.pathname === "/leaderboard") {
@@ -129,6 +132,29 @@ function App() {
         replace: true,
       });
     }
+  }
+
+  function handleOpenProfileModal() {
+    if (!currentUser) return;
+
+    setIsProfileModalOpen(true);
+  }
+
+  function handleCloseProfileModal() {
+    setIsProfileModalOpen(false);
+  }
+
+  function handleUserUpdated(user: AuthUser) {
+    saveUser(user);
+  }
+
+  function handleAccountDeleted() {
+    setCurrentUser(null);
+    setIsProfileModalOpen(false);
+    setIsAuthModalOpen(false);
+    setPendingScore(null);
+    localStorage.removeItem(USER_STORAGE_KEY);
+    navigate("/");
   }
 
   function handleBackHomeWithoutSaving() {
@@ -206,6 +232,7 @@ function App() {
         onNavigateRequest={handleGuardedNavigate}
         onLoginClick={handleGuardedLoginClick}
         onLogout={handleLogout}
+        onProfileClick={handleOpenProfileModal}
       />
 
       <Routes>
@@ -235,7 +262,12 @@ function App() {
 
         <Route
           path="/leaderboard"
-          element={<LeaderboardPage currentUser={currentUser} />}
+          element={
+            <LeaderboardPage
+              currentUser={currentUser}
+              onOpenProfileModal={handleOpenProfileModal}
+            />
+          }
         />
 
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -246,6 +278,15 @@ function App() {
           pendingScore={pendingScore}
           onClose={handleCloseAuthModal}
           onAuthenticated={handleAuthenticated}
+        />
+      )}
+
+      {isProfileModalOpen && currentUser && (
+        <ProfileModal
+          currentUser={currentUser}
+          onClose={handleCloseProfileModal}
+          onUserUpdated={handleUserUpdated}
+          onAccountDeleted={handleAccountDeleted}
         />
       )}
 

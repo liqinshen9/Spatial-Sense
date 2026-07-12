@@ -29,6 +29,10 @@ public class AppDbContext : DbContext
             .Property(user => user.Email)
             .HasMaxLength(160);
 
+        modelBuilder.Entity<User>()
+            .Property(user => user.AvatarUrl)
+            .HasMaxLength(300);
+
         modelBuilder.Entity<ScoreEntry>()
             .HasOne(score => score.User)
             .WithMany(user => user.Scores)

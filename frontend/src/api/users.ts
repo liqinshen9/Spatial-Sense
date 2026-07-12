@@ -2,18 +2,6 @@ import type { AuthUser } from "../types/auth";
 
 const API_BASE_URL = "http://localhost:5000";
 
-type LoginPayload = {
-  usernameOrEmail: string;
-  password: string;
-};
-
-type RegisterPayload = {
-  name: string;
-  email: string;
-  password: string;
-  avatar?: File | null;
-};
-
 export type ApiError = Error & {
   status?: number;
   data?: unknown;
@@ -48,10 +36,6 @@ async function createApiError(response: Response): Promise<ApiError> {
     }
   }
 
-  if (response.status === 404) {
-    message = "User not found. Please register first.";
-  }
-
   const error = new Error(message) as ApiError;
   error.status = response.status;
   error.data = data;
@@ -59,35 +43,15 @@ async function createApiError(response: Response): Promise<ApiError> {
   return error;
 }
 
-export async function loginUser(payload: LoginPayload): Promise<AuthUser> {
-  const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw await createApiError(response);
-  }
-
-  return response.json();
-}
-
-export async function registerUser(payload: RegisterPayload): Promise<AuthUser> {
+export async function updateUserAvatar(
+  userId: number,
+  avatar: File
+): Promise<AuthUser> {
   const formData = new FormData();
+  formData.append("avatar", avatar);
 
-  formData.append("name", payload.name);
-  formData.append("email", payload.email);
-  formData.append("password", payload.password);
-
-  if (payload.avatar) {
-    formData.append("avatar", payload.avatar);
-  }
-
-  const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-    method: "POST",
+  const response = await fetch(`${API_BASE_URL}/api/users/${userId}/avatar`, {
+    method: "PUT",
     body: formData,
   });
 
@@ -96,4 +60,14 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthUser> 
   }
 
   return response.json();
+}
+
+export async function deleteUserAccount(userId: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw await createApiError(response);
+  }
 }

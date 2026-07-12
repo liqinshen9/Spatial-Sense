@@ -5,6 +5,7 @@ export type ScoreRanking = {
   rank: number;
   userId: number;
   username: string;
+  avatarUrl: string | null;
   difficulty: string;
   elapsedMilliseconds: number;
   time: string;
