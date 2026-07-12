@@ -3,6 +3,7 @@ using Backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Backend.Services;
 using Microsoft.Extensions.FileProviders;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 builder.Services.AddControllers();
+builder.Services.AddOpenApi();
 builder.Services.AddSingleton<PuzzleService>();
 builder.Services.AddSingleton<PasswordService>();
 builder.Services.AddSingleton<AvatarStorageService>();
@@ -63,6 +65,8 @@ app.MapGet("/api/users", async (AppDbContext db) =>
 });
 
 app.MapControllers();
+app.MapOpenApi();
+app.MapScalarApiReference();
 
 app.MapGet("/api/puzzles", (PuzzleService puzzleService) =>
 {
