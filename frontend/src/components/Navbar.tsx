@@ -1,4 +1,4 @@
-import { VolumeNotice, SunOne, Moon } from "@icon-park/react";
+import { VolumeNotice, VolumeMute, SunOne, Moon } from "@icon-park/react";
 import { NavLink } from "react-router-dom";
 import type { AuthUser } from "../types/auth";
 
@@ -61,7 +61,11 @@ function Navbar({
           aria-pressed={isSoundEnabled}
           title={isSoundEnabled ? "Sound on" : "Sound off"}
         >
-          <VolumeNotice theme="outline" size="22" fill="currentColor" />
+          {isSoundEnabled ? (
+            <VolumeNotice theme="outline" size="22" fill="currentColor" />
+          ) : (
+            <VolumeMute theme="outline" size="22" fill="currentColor" />
+          )}
         </button>
 
         <button
