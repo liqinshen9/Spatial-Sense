@@ -208,6 +208,25 @@ export function playErrorSound() {
   });
 }
 
+export function playWarningSound() {
+  playTone({
+    startFrequency: 300,
+    endFrequency: 220,
+    volume: 0.035,
+    duration: 0.075,
+    type: "triangle",
+  });
+
+  playTone({
+    startFrequency: 260,
+    endFrequency: 190,
+    volume: 0.025,
+    duration: 0.075,
+    delay: 0.07,
+    type: "sine",
+  });
+}
+
 export function playSoundToggleOnSound() {
   playTone({
     startFrequency: 440,

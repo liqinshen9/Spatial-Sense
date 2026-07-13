@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import type { FormEvent } from "react";
 import type { CompletedScore } from "./GamePage";
 import type { AuthUser } from "../types/auth";
 import { loginUser, registerUser, type ApiError } from "../api/auth";
@@ -104,9 +103,7 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
     setMessage("");
   }
 
-  async function handleLoginSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function handleLoginSubmit() {
     setHasSubmitted(true);
 
     if (
@@ -144,9 +141,7 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
     }
   }
 
-  async function handleRegisterSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function handleRegisterSubmit() {
     setHasSubmitted(true);
 
     if (
@@ -239,7 +234,10 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
 
           {mode === "login" ? (
             <form
-              onSubmit={handleLoginSubmit}
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleLoginSubmit();
+              }}
               noValidate
               className="mt-7 space-y-5"
             >
@@ -293,7 +291,10 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
             </form>
           ) : (
             <form
-              onSubmit={handleRegisterSubmit}
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleRegisterSubmit();
+              }}
               noValidate
               className="mt-7 space-y-5"
             >

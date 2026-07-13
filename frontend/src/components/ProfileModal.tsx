@@ -5,6 +5,7 @@ import {
   updateUserAvatar,
   type ApiError,
 } from "../api/users";
+import { playWarningSound } from "../utils/soundEffects";
 
 const API_BASE_URL = "http://localhost:5000";
 
@@ -87,6 +88,8 @@ function ProfileModal({
   }
 
   async function handleDeleteAccount() {
+    playWarningSound();
+
     if (!showDeleteConfirm) {
       setShowDeleteConfirm(true);
       setMessage("Are you sure? This will delete your account and scores.");
@@ -192,6 +195,7 @@ function ProfileModal({
 
           <button
             type="button"
+            data-sound="off"
             onClick={handleDeleteAccount}
             disabled={isDeleting}
             className="w-full rounded-xl border border-red-500 px-4 py-3 text-sm font-black text-red-500 transition hover:bg-red-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
