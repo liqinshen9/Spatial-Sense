@@ -30,6 +30,7 @@ function HeroSection({
         <div className="mt-7 flex w-full flex-col items-start gap-6 sm:mt-8 sm:w-auto sm:flex-row sm:items-end sm:gap-6">
           <button
             type="button"
+            data-sound="start-game"
             onClick={() => navigate("/game")}
             className="rounded-xl bg-[var(--color-emphasis)] px-7 py-3 text-base font-black text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)] sm:px-8 sm:py-4 sm:text-lg"
           >

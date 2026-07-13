@@ -16,14 +16,26 @@ import ProfileModal from "./components/ProfileModal";
 import type { CompletedScore } from "./components/GamePage";
 import type { AuthUser } from "./types/auth";
 import { createScore } from "./api/scores";
+import { useMinimalSoundEffects } from "./hooks/useMinimalSoundEffects";
+import {
+  playSoundToggleOffSound,
+  playSoundToggleOnSound,
+  setSoundEffectsEnabled,
+} from "./utils/soundEffects";
 
 const USER_STORAGE_KEY = "spatialSenseUser";
+const SOUND_STORAGE_KEY = "spatialSenseSoundEnabled";
 
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [isDarkMode, setIsDarkMode] = useState(true);
+
+  const [isSoundEnabled, setIsSoundEnabled] = useState(() => {
+    return localStorage.getItem(SOUND_STORAGE_KEY) !== "false";
+  });
+
   const [difficultyIndex, setDifficultyIndex] = useState(0);
 
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
@@ -38,6 +50,8 @@ function App() {
 
   const pendingLeaveActionRef = useRef<(() => void) | null>(null);
   const isSavingScoreRef = useRef(false);
+
+  useMinimalSoundEffects(isSoundEnabled);
 
   useEffect(() => {
     const savedUser = localStorage.getItem(USER_STORAGE_KEY);
@@ -67,6 +81,23 @@ function App() {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [location.pathname, shouldWarnBeforeLeavingGame]);
+
+  function handleToggleSound() {
+    const nextValue = !isSoundEnabled;
+
+    if (isSoundEnabled) {
+      playSoundToggleOffSound();
+    }
+
+    setSoundEffectsEnabled(nextValue);
+
+    if (nextValue) {
+      playSoundToggleOnSound();
+    }
+
+    setIsSoundEnabled(nextValue);
+    localStorage.setItem(SOUND_STORAGE_KEY, String(nextValue));
+  }
 
   function requestLeaveGame(actionAfterLeaving: () => void) {
     if (location.pathname !== "/game" || !shouldWarnBeforeLeavingGame) {
@@ -227,8 +258,10 @@ function App() {
     >
       <Navbar
         isDarkMode={isDarkMode}
+        isSoundEnabled={isSoundEnabled}
         currentUser={currentUser}
         onToggleTheme={() => setIsDarkMode((prev) => !prev)}
+        onToggleSound={handleToggleSound}
         onNavigateRequest={handleGuardedNavigate}
         onLoginClick={handleGuardedLoginClick}
         onLogout={handleLogout}

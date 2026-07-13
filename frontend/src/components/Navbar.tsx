@@ -6,8 +6,10 @@ const API_BASE_URL = "http://localhost:5000";
 
 type NavbarProps = {
   isDarkMode: boolean;
+  isSoundEnabled: boolean;
   currentUser: AuthUser | null;
   onToggleTheme: () => void;
+  onToggleSound: () => void;
   onLoginClick: () => void;
   onLogout: () => void;
   onNavigateRequest: (path: string) => void;
@@ -26,8 +28,10 @@ function getAvatarSrc(avatarUrl: string | null) {
 
 function Navbar({
   isDarkMode,
+  isSoundEnabled,
   currentUser,
   onToggleTheme,
+  onToggleSound,
   onLoginClick,
   onLogout,
   onNavigateRequest,
@@ -46,8 +50,16 @@ function Navbar({
       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-8">
         <button
           type="button"
-          className="shrink-0 transition hover:text-[var(--color-emphasis)]"
-          aria-label="Sound"
+          data-sound="off"
+          onClick={onToggleSound}
+          className={`shrink-0 transition hover:text-[var(--color-emphasis)] ${
+            isSoundEnabled
+              ? "text-[var(--color-text-primary)]"
+              : "text-[var(--color-text-primary)] opacity-35"
+          }`}
+          aria-label={isSoundEnabled ? "Turn sound off" : "Turn sound on"}
+          aria-pressed={isSoundEnabled}
+          title={isSoundEnabled ? "Sound on" : "Sound off"}
         >
           <VolumeNotice theme="outline" size="22" fill="currentColor" />
         </button>
@@ -107,7 +119,7 @@ function Navbar({
             )}
           </button>
 
-          <p className="hidden text-sm pr-4 font-bold text-[var(--color-text-primary)] sm:block">
+          <p className="hidden pr-4 text-sm font-bold text-[var(--color-text-primary)] sm:block">
             Hello,{" "}
             <span className="text-[var(--color-emphasis)]">
               {currentUser.name}
@@ -117,7 +129,7 @@ function Navbar({
           <button
             type="button"
             onClick={onLogout}
-            className="rounded-lg border border-[var(--color-emphasis)] bg-[var(--color-emphasis)] px-2.5 py-1.5 text-xs font-bold text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)] hover:border-[var(--color-emphasis-hover)] sm:px-4 sm:py-2 sm:text-sm"
+            className="rounded-lg border border-[var(--color-emphasis)] bg-[var(--color-emphasis)] px-2.5 py-1.5 text-xs font-bold text-[var(--color-emphasis-contrast)] transition hover:border-[var(--color-emphasis-hover)] hover:bg-[var(--color-emphasis-hover)] sm:px-4 sm:py-2 sm:text-sm"
           >
             Logout
           </button>

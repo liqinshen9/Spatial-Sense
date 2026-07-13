@@ -4,6 +4,7 @@ import { getRandomPuzzle } from "../api/puzzles";
 import PuzzleBlockCanvas from "./PuzzleBlockCanvas";
 import type { BlockOrientation, CubeDto, PuzzleDto } from "../types/puzzle";
 import type { AuthUser } from "../types/auth";
+import {playButtonSound,playGameCompleteSound,playPuzzleSolvedSound} from "../utils/soundEffects";
 
 export type CompletedScore = {
   difficultyName: string;
@@ -397,42 +398,51 @@ function GamePage({
   }
 
   function handleSolved() {
-    if (isSolved || isGameComplete) return;
+  if (isSolved || isGameComplete) return;
 
-    setIsSolved(true);
-
-    if (solveTimeoutRef.current !== null) {
-      window.clearTimeout(solveTimeoutRef.current);
-    }
-
-    solveTimeoutRef.current = window.setTimeout(() => {
-      moveToNextPuzzle();
-    }, 800);
+  if (currentProgressStep >= totalProgressSteps) {
+    playGameCompleteSound();
+  } else {
+    playPuzzleSolvedSound();
   }
+
+  setIsSolved(true);
+
+  if (solveTimeoutRef.current !== null) {
+    window.clearTimeout(solveTimeoutRef.current);
+  }
+
+  solveTimeoutRef.current = window.setTimeout(() => {
+    moveToNextPuzzle();
+  }, 800);
+}
 
   function handleRotate(axis: Axis) {
-    if (!puzzle || isLoadingPuzzle || isSolved || isGameComplete) return;
+  if (!puzzle || isLoadingPuzzle || isSolved || isGameComplete) return;
 
-    setSelectedAxis(axis);
+  setSelectedAxis(axis);
 
-    const nextOrientation = getNextOrientation(
-      blockOrientation,
-      axis,
-      selectedRotationStep
-    );
+  const nextOrientation = getNextOrientation(
+    blockOrientation,
+    axis,
+    selectedRotationStep
+  );
 
-    setBlockOrientation(nextOrientation);
+  setBlockOrientation(nextOrientation);
 
-    const hasSolvedPuzzle = doBlocksVisuallyMatch(
-      puzzle.cubes,
-      nextOrientation,
-      puzzle.targetOrientation
-    );
+  const hasSolvedPuzzle = doBlocksVisuallyMatch(
+    puzzle.cubes,
+    nextOrientation,
+    puzzle.targetOrientation
+  );
 
-    if (hasSolvedPuzzle) {
-      handleSolved();
-    }
+  if (hasSolvedPuzzle) {
+    handleSolved();
+    return;
   }
+
+  playButtonSound();
+}
 
   function handleReset() {
     if (isSolved || isGameComplete) return;
@@ -589,6 +599,7 @@ function GamePage({
                     <button
                       key={axis}
                       type="button"
+                      data-sound="off"
                       disabled={isLoadingPuzzle || isSolved || isGameComplete}
                       onPointerEnter={(event) => {
                         if (event.pointerType === "mouse") {

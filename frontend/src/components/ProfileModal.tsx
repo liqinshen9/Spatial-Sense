@@ -120,7 +120,7 @@ function ProfileModal({
         </button>
 
         <h2 className="text-center text-2xl font-black text-[var(--color-text-primary)] sm:text-3xl">
-          Account
+          My Profile
         </h2>
 
         <div className="mt-7 h-px w-full bg-[var(--color-nav-border)]" />
