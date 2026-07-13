@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import type { CompletedScore } from "./GamePage";
 import type { AuthUser } from "../types/auth";
 import { loginUser, registerUser, type ApiError } from "../api/auth";
+import { playButtonSound, playErrorSound } from "../utils/soundEffects";
 
 type AuthModalProps = {
   pendingScore: CompletedScore | null;
@@ -59,6 +60,8 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
     hasSubmitted && mode === "register" && confirmPassword.trim().length === 0;
 
   function triggerError(errorMessage: string) {
+    playErrorSound();
+
     setMessage(errorMessage);
     setShouldShake(false);
 
@@ -69,9 +72,7 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
 
   function getInputClass(hasError: boolean) {
     return `mt-3 w-full rounded-xl border ${
-      hasError
-        ? "border-red-500"
-        : "border-[var(--color-nav-border)]"
+      hasError ? "border-red-500" : "border-[var(--color-nav-border)]"
     } bg-[var(--color-leaderboard-row)] px-4 py-3 text-base font-bold text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-primary)] placeholder:opacity-45 focus:border-[var(--color-emphasis)]`;
   }
 
@@ -115,6 +116,8 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
       triggerError("Please enter your username/email and password.");
       return;
     }
+
+    playButtonSound();
 
     try {
       setIsSubmitting(true);
@@ -161,6 +164,8 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
       return;
     }
 
+    playButtonSound();
+
     try {
       setIsSubmitting(true);
       setMessage("");
@@ -191,7 +196,6 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
       setIsSubmitting(false);
     }
   }
-
   return (
     <div className="fixed inset-0 z-[60] overflow-hidden bg-[var(--color-nav-bg)] px-5 py-6 backdrop-blur-sm">
       <div className="flex min-h-full items-start justify-center sm:items-center">
@@ -234,7 +238,11 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
           )}
 
           {mode === "login" ? (
-            <form onSubmit={handleLoginSubmit} noValidate className="mt-7 space-y-5">
+            <form
+              onSubmit={handleLoginSubmit}
+              noValidate
+              className="mt-7 space-y-5"
+            >
               <label className="block">
                 <span className="text-sm font-black text-[var(--color-text-primary)]">
                   Username or Email
@@ -265,6 +273,7 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
 
               <button
                 type="submit"
+                data-sound="off"
                 disabled={isSubmitting}
                 className="w-full rounded-xl bg-[var(--color-emphasis)] px-4 py-3 text-base font-black text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               >
@@ -359,6 +368,7 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
 
               <button
                 type="submit"
+                data-sound="off"
                 disabled={isSubmitting}
                 className="w-full rounded-xl bg-[var(--color-emphasis)] px-4 py-3 text-base font-black text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               >
