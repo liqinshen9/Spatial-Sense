@@ -5,6 +5,7 @@ import PuzzleBlockCanvas from "./PuzzleBlockCanvas";
 import type { BlockOrientation, CubeDto, PuzzleDto } from "../types/puzzle";
 import type { AuthUser } from "../types/auth";
 import {playButtonSound,playGameCompleteSound,playPuzzleSolvedSound} from "../utils/soundEffects";
+import BlockLoading from "./BlockLoading";
 
 export type CompletedScore = {
   difficultyName: string;
@@ -501,7 +502,7 @@ function GamePage({
 
             <div className="mt-3 flex aspect-square w-full items-center justify-center rounded-[22px] border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] lg:mt-4 lg:w-[240px] lg:rounded-[28px]">
               {isLoadingPuzzle && (
-                <p className="text-sm font-bold opacity-60">Loading...</p>
+                <BlockLoading size="sm" label="Loading target..." />
               )}
 
               {!isLoadingPuzzle && puzzleError && (
@@ -545,7 +546,7 @@ function GamePage({
             }`}
           >
             {isLoadingPuzzle && (
-              <p className="text-sm font-bold opacity-60">Loading puzzle...</p>
+              <BlockLoading size="lg" label="Loading puzzles..." />
             )}
 
             {!isLoadingPuzzle && puzzleError && (
@@ -624,11 +625,6 @@ function GamePage({
                 })}
               </div>
 
-              {isSolved && (
-                <p className="text-sm font-black text-green-300">
-                  Matched! Loading next puzzle...
-                </p>
-              )}
 
               {isGameComplete && (
                 <p className="text-sm font-black text-green-300">

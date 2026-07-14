@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { getScoresByDifficulty } from "../api/scores";
 import type { Difficulty, ScoreRanking } from "../types/score";
 import type { AuthUser } from "../types/auth";
+import BlockLoading from "./BlockLoading";
 
 const API_BASE_URL = "http://localhost:5000";
 
@@ -118,9 +119,9 @@ function LeaderboardPage({
           </div>
 
           {isLoading && (
-            <p className="px-8 py-8 text-center text-sm font-bold opacity-70">
-              Loading leaderboard...
-            </p>
+            <div className="flex min-h-[360px] items-center justify-center rounded-[28px] border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)]">
+              <BlockLoading size="lg" label="Loading leaderboard..." />
+            </div>
           )}
 
           {!isLoading && error && (
