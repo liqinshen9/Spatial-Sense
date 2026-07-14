@@ -485,8 +485,14 @@ function GamePage({
   );
 
   return (
-    <section className="relative z-10 min-h-[calc(100vh-56px)] overflow-y-auto px-4 py-5 lg:h-[calc(100vh-56px)] lg:overflow-hidden lg:px-8 lg:py-6">
-      <div className="grid min-h-full grid-cols-1 gap-6 lg:h-full lg:grid-cols-[260px_minmax(0,1fr)_220px] lg:gap-7">
+  <section className="relative z-10 min-h-[calc(100vh-56px)] overflow-y-auto px-4 py-5 lg:h-[calc(100vh-56px)] lg:overflow-hidden lg:px-8 lg:py-6">
+    {isLoadingPuzzle && !puzzleError && (
+      <div className="absolute inset-0 z-30 flex items-center justify-center bg-[var(--color-bg-primary)]">
+        <BlockLoading size="lg" label="" />
+      </div>
+    )}
+
+    <div className="grid min-h-full grid-cols-1 gap-6 lg:h-full lg:grid-cols-[260px_minmax(0,1fr)_220px] lg:gap-7">
         <aside className="order-1 grid grid-cols-[132px_minmax(0,1fr)] items-start gap-x-4 sm:grid-cols-[160px_minmax(0,1fr)] lg:order-none lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:items-stretch lg:gap-x-0">
           <p className="col-span-2 mb-4 text-lg font-black text-[var(--color-text-primary)] lg:mb-0 lg:text-2xl">
             Level:{" "}
@@ -501,9 +507,6 @@ function GamePage({
             </p>
 
             <div className="mt-3 flex aspect-square w-full items-center justify-center rounded-[22px] border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] lg:mt-4 lg:w-[240px] lg:rounded-[28px]">
-              {isLoadingPuzzle && (
-                <BlockLoading size="sm" label="Loading target..." />
-              )}
 
               {!isLoadingPuzzle && puzzleError && (
                 <p className="px-4 text-center text-sm font-bold text-[var(--color-emphasis)]">
@@ -545,10 +548,6 @@ function GamePage({
                 : "border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)]"
             }`}
           >
-            {isLoadingPuzzle && (
-              <BlockLoading size="lg" label="Loading puzzles..." />
-            )}
-
             {!isLoadingPuzzle && puzzleError && (
               <p className="text-sm font-bold text-[var(--color-emphasis)]">
                 {puzzleError}
