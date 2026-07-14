@@ -109,7 +109,7 @@ public class PuzzleService
         return difficulty switch
         {
             "Easy" => 4,
-            "Medium" => 6,
+            "Medium" => 8,
             "Difficult" => 8,
             _ => 4
         };
@@ -120,7 +120,7 @@ public class PuzzleService
         return difficulty switch
         {
             "Easy" => 1,
-            "Medium" => 2,
+            "Medium" => 3,
             "Difficult" => 3,
             _ => 1
         };
@@ -140,16 +140,29 @@ public class PuzzleService
     }
 
     private static List<PuzzleMoveDto> GenerateMoveSequence(string difficulty, Random random)
-{
-    var moves = new List<PuzzleMoveDto>();
-    var axes = new[] { "X", "Y", "Z" };
-
-    if (difficulty == "Easy")
     {
-        // Easy: 1 or 2 moves, only 90-degree rotations.
-        var moveCount = random.Next(1, 3);
+        var moves = new List<PuzzleMoveDto>();
+        var axes = new[] { "X", "Y", "Z" };
 
-        for (var i = 0; i < moveCount; i++)
+        if (difficulty == "Easy")
+        {
+            var moveCount = random.Next(1, 3);
+
+            for (var i = 0; i < moveCount; i++)
+            {
+                moves.Add(new PuzzleMoveDto
+                {
+                    Axis = axes[random.Next(axes.Length)],
+                    Degrees = random.Next(2) == 0 ? -90 : 90
+                });
+            }
+
+            return moves;
+        }
+
+        var ninetyMoveCount = random.Next(2, 6);
+
+        for (var i = 0; i < ninetyMoveCount; i++)
         {
             moves.Add(new PuzzleMoveDto
             {
@@ -158,54 +171,13 @@ public class PuzzleService
             });
         }
 
-        return moves;
-    }
-
-    if (difficulty == "Medium")
-    {
-        // Medium: 3 to 5 moves, only 90-degree rotations.
-        var moveCount = random.Next(3, 6);
-
-        for (var i = 0; i < moveCount; i++)
-        {
-            moves.Add(new PuzzleMoveDto
-            {
-                Axis = axes[random.Next(axes.Length)],
-                Degrees = random.Next(2) == 0 ? -90 : 90
-            });
-        }
-
-        return moves;
-    }
-
-    /*Difficult: target appears at a 45-degree angle.Put the 45-degree move on Z, because it is the most visually obvious
-    in the current camera view.*/
-    var ninetyMoveCount = random.Next(2, 6);
-
-    for (var i = 0; i < ninetyMoveCount; i++)
-    {
         moves.Add(new PuzzleMoveDto
         {
-            Axis = axes[random.Next(axes.Length)],
-            Degrees = random.Next(2) == 0 ? -90 : 90
+            Axis = "Z",
+            Degrees = random.Next(2) == 0 ? -45 : 45
         });
-    }
 
-    moves.Add(new PuzzleMoveDto
-    {
-        Axis = "Z",
-        Degrees = random.Next(2) == 0 ? -45 : 45
-    });
-
-    return moves;
-}    private static int GetRandomNinetyDegree(Random random)
-    {
-        return random.Next(2) == 0 ? -90 : 90;
-    }
-
-    private static int GetRandomFortyFiveDegree(Random random)
-    {
-        return random.Next(2) == 0 ? -45 : 45;
+        return moves;
     }
 
     private static Quaternion BuildOrientation(List<PuzzleMoveDto> moves)
@@ -246,17 +218,14 @@ public class PuzzleService
             return true;
         }
 
-        if (difficulty == "Difficult")
+        if (difficulty == "Medium" || difficulty == "Difficult")
         {
-            /*Difficult is invalid if the target can be matched by any 90-degree-only orientation. So if this returns true, it means
-            we reject it and generate another one.*/
             return CanMatchUsingOnlyNinetyDegreeRotations(
                 cubes,
                 targetOrientation
             );
         }
 
-        //Easy and Medium only need to reject puzzles that already look solved.
         return IsSameVisualState(
             cubes,
             Quaternion.Identity,

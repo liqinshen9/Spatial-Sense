@@ -4,7 +4,11 @@ import { getRandomPuzzle } from "../api/puzzles";
 import PuzzleBlockCanvas from "./PuzzleBlockCanvas";
 import type { BlockOrientation, CubeDto, PuzzleDto } from "../types/puzzle";
 import type { AuthUser } from "../types/auth";
-import {playButtonSound,playGameCompleteSound,playPuzzleSolvedSound} from "../utils/soundEffects";
+import {
+  playButtonSound,
+  playGameCompleteSound,
+  playPuzzleSolvedSound,
+} from "../utils/soundEffects";
 import BlockLoading from "./BlockLoading";
 
 export type CompletedScore = {
@@ -27,6 +31,8 @@ type RotationStep = -90 | -45 | 45 | 90;
 
 const difficultyNames = ["Easy", "Medium", "Difficult"] as const;
 const totalProgressSteps = 10;
+const difficultFreeRotationSteps = 3;
+const difficultPenaltyPerExtraRotationMilliseconds = 2000;
 
 const identityOrientation: BlockOrientation = {
   x: 0,
@@ -46,7 +52,14 @@ function formatTime(totalMilliseconds: number) {
   const seconds = Math.floor((totalMilliseconds % 60000) / 1000);
   const milliseconds = totalMilliseconds % 1000;
 
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2,"0")}:${String(milliseconds).padStart(3, "0")}`;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+    2,
+    "0"
+  )}:${String(milliseconds).padStart(3, "0")}`;
+}
+
+function formatPenalty(totalMilliseconds: number) {
+  return Math.floor(totalMilliseconds / 1000);
 }
 
 function orientationToQuaternion(orientation: BlockOrientation) {
@@ -150,6 +163,40 @@ function doBlocksVisuallyMatch(
   const targetState = getVisualStateSignature(cubes, targetOrientation);
 
   return currentState === targetState;
+}
+
+function PenaltyStatus({
+  freeStepsLeft,
+  totalPenaltyMilliseconds,
+  puzzlePenaltyMilliseconds,
+  compact = false,
+}: {
+  freeStepsLeft: number;
+  totalPenaltyMilliseconds: number;
+  puzzlePenaltyMilliseconds: number;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      className={`font-bold ${
+        compact ? "mt-3 text-[10px]" : "mt-4 text-sm"
+      }`}
+    >
+      <p className="text-[var(--color-text-primary)] opacity-80">
+        {freeStepsLeft > 0
+          ? `${freeStepsLeft} free steps left`
+          : "No free steps left"}
+      </p>
+
+      <p className="mt-2 text-red-300">
+        Total Penalty: +{formatPenalty(totalPenaltyMilliseconds)}s
+      </p>
+
+      <p className="mt-1 text-red-300">
+        (This puzzle: +{formatPenalty(puzzlePenaltyMilliseconds)}s)
+      </p>
+    </div>
+  );
 }
 
 function ProgressGrid({
@@ -268,6 +315,7 @@ function GamePage({
   onGameProgressChange,
 }: GamePageProps) {
   const difficultyName = difficultyNames[difficultyIndex] ?? "Easy";
+  const isPenaltyMode = difficultyName === "Difficult";
 
   const [elapsedMilliseconds, setElapsedMilliseconds] = useState(0);
   const [finalElapsedMilliseconds, setFinalElapsedMilliseconds] =
@@ -293,7 +341,63 @@ function GamePage({
   const [isSolved, setIsSolved] = useState(false);
   const [isGameComplete, setIsGameComplete] = useState(false);
 
+  const [puzzleRotationCount, setPuzzleRotationCount] = useState(0);
+  const [puzzlePenaltyMilliseconds, setPuzzlePenaltyMilliseconds] = useState(0);
+  const [totalPenaltyMilliseconds, setTotalPenaltyMilliseconds] = useState(0);
+
+  const puzzleRotationCountRef = useRef(0);
+  const puzzlePenaltyMillisecondsRef = useRef(0);
+  const totalPenaltyMillisecondsRef = useRef(0);
+
   const solveTimeoutRef = useRef<number | null>(null);
+
+  function resetPuzzlePenaltyState() {
+    puzzleRotationCountRef.current = 0;
+    puzzlePenaltyMillisecondsRef.current = 0;
+
+    setPuzzleRotationCount(0);
+    setPuzzlePenaltyMilliseconds(0);
+  }
+
+  function resetAllPenaltyState() {
+    puzzleRotationCountRef.current = 0;
+    puzzlePenaltyMillisecondsRef.current = 0;
+    totalPenaltyMillisecondsRef.current = 0;
+
+    setPuzzleRotationCount(0);
+    setPuzzlePenaltyMilliseconds(0);
+    setTotalPenaltyMilliseconds(0);
+  }
+
+  function recordRotationAndGetPenalty() {
+    if (!isPenaltyMode) {
+      return 0;
+    }
+
+    const nextRotationCount = puzzleRotationCountRef.current + 1;
+    puzzleRotationCountRef.current = nextRotationCount;
+    setPuzzleRotationCount(nextRotationCount);
+
+    if (nextRotationCount <= difficultFreeRotationSteps) {
+      return 0;
+    }
+
+    const nextPuzzlePenalty =
+      puzzlePenaltyMillisecondsRef.current +
+      difficultPenaltyPerExtraRotationMilliseconds;
+
+    const nextTotalPenalty =
+      totalPenaltyMillisecondsRef.current +
+      difficultPenaltyPerExtraRotationMilliseconds;
+
+    puzzlePenaltyMillisecondsRef.current = nextPuzzlePenalty;
+    totalPenaltyMillisecondsRef.current = nextTotalPenalty;
+
+    setPuzzlePenaltyMilliseconds(nextPuzzlePenalty);
+    setTotalPenaltyMilliseconds(nextTotalPenalty);
+
+    return difficultPenaltyPerExtraRotationMilliseconds;
+  }
 
   const loadPuzzle = useCallback(async () => {
     if (solveTimeoutRef.current !== null) {
@@ -308,6 +412,7 @@ function GamePage({
       setSelectedAxis(null);
       setHoveredAxis(null);
       setBlockOrientation(identityOrientation);
+      resetPuzzlePenaltyState();
 
       let validPuzzle: PuzzleDto | null = null;
 
@@ -339,7 +444,7 @@ function GamePage({
   }, [difficultyName]);
 
   useEffect(() => {
-  onGameProgressChange(!isGameComplete);
+    onGameProgressChange(!isGameComplete);
 
     return () => {
       onGameProgressChange(false);
@@ -358,6 +463,7 @@ function GamePage({
     setSelectedAxis(null);
     setHoveredAxis(null);
     setBlockOrientation(identityOrientation);
+    resetAllPenaltyState();
 
     loadPuzzle();
   }, [loadPuzzle]);
@@ -385,9 +491,11 @@ function GamePage({
     solveTimeoutRef.current = null;
 
     if (currentProgressStep >= totalProgressSteps) {
-      const finalTime = Math.floor(performance.now() - timerStartRef.current);
+      const finalTime =
+        Math.floor(performance.now() - timerStartRef.current) +
+        totalPenaltyMillisecondsRef.current;
 
-      setElapsedMilliseconds(finalTime);
+      setElapsedMilliseconds(finalTime - totalPenaltyMillisecondsRef.current);
       setFinalElapsedMilliseconds(finalTime);
       setIsGameComplete(true);
       setIsSolved(false);
@@ -399,51 +507,53 @@ function GamePage({
   }
 
   function handleSolved() {
-  if (isSolved || isGameComplete) return;
+    if (isSolved || isGameComplete) return;
 
-  if (currentProgressStep >= totalProgressSteps) {
-    playGameCompleteSound();
-  } else {
-    playPuzzleSolvedSound();
+    if (currentProgressStep >= totalProgressSteps) {
+      playGameCompleteSound();
+    } else {
+      playPuzzleSolvedSound();
+    }
+
+    setIsSolved(true);
+
+    if (solveTimeoutRef.current !== null) {
+      window.clearTimeout(solveTimeoutRef.current);
+    }
+
+    solveTimeoutRef.current = window.setTimeout(() => {
+      moveToNextPuzzle();
+    }, 800);
   }
-
-  setIsSolved(true);
-
-  if (solveTimeoutRef.current !== null) {
-    window.clearTimeout(solveTimeoutRef.current);
-  }
-
-  solveTimeoutRef.current = window.setTimeout(() => {
-    moveToNextPuzzle();
-  }, 800);
-}
 
   function handleRotate(axis: Axis) {
-  if (!puzzle || isLoadingPuzzle || isSolved || isGameComplete) return;
+    if (!puzzle || isLoadingPuzzle || isSolved || isGameComplete) return;
 
-  setSelectedAxis(axis);
+    setSelectedAxis(axis);
 
-  const nextOrientation = getNextOrientation(
-    blockOrientation,
-    axis,
-    selectedRotationStep
-  );
+    const nextOrientation = getNextOrientation(
+      blockOrientation,
+      axis,
+      selectedRotationStep
+    );
 
-  setBlockOrientation(nextOrientation);
+    setBlockOrientation(nextOrientation);
 
-  const hasSolvedPuzzle = doBlocksVisuallyMatch(
-    puzzle.cubes,
-    nextOrientation,
-    puzzle.targetOrientation
-  );
+    recordRotationAndGetPenalty();
 
-  if (hasSolvedPuzzle) {
-    handleSolved();
-    return;
+    const hasSolvedPuzzle = doBlocksVisuallyMatch(
+      puzzle.cubes,
+      nextOrientation,
+      puzzle.targetOrientation
+    );
+
+    if (hasSolvedPuzzle) {
+      handleSolved();
+      return;
+    }
+
+    playButtonSound();
   }
-
-  playButtonSound();
-}
 
   function handleReset() {
     if (isSolved || isGameComplete) return;
@@ -476,6 +586,13 @@ function GamePage({
   }
 
   const highlightedAxis = hoveredAxis ?? selectedAxis;
+  const displayedElapsedMilliseconds =
+    elapsedMilliseconds + totalPenaltyMilliseconds;
+
+  const freeStepsLeft = Math.max(
+    difficultFreeRotationSteps - puzzleRotationCount,
+    0
+  );
 
   const stepsLeft = Math.max(
     totalProgressSteps -
@@ -485,14 +602,14 @@ function GamePage({
   );
 
   return (
-  <section className="relative z-10 min-h-[calc(100vh-56px)] overflow-y-auto px-4 py-5 lg:h-[calc(100vh-56px)] lg:overflow-hidden lg:px-8 lg:py-6">
-    {isLoadingPuzzle && !puzzleError && (
-      <div className="absolute inset-0 z-30 flex items-center justify-center bg-[var(--color-bg-primary)]">
-        <BlockLoading size="lg" label="" />
-      </div>
-    )}
+    <section className="relative z-10 min-h-[calc(100vh-56px)] overflow-y-auto px-4 py-5 lg:h-[calc(100vh-56px)] lg:overflow-hidden lg:px-8 lg:py-6">
+      {isLoadingPuzzle && !puzzleError && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-[var(--color-bg-primary)]">
+          <BlockLoading size="lg" label="" />
+        </div>
+      )}
 
-    <div className="grid min-h-full grid-cols-1 gap-6 lg:h-full lg:grid-cols-[260px_minmax(0,1fr)_220px] lg:gap-7">
+      <div className="grid min-h-full grid-cols-1 gap-6 lg:h-full lg:grid-cols-[260px_minmax(0,1fr)_220px] lg:gap-7">
         <aside className="order-1 grid grid-cols-[132px_minmax(0,1fr)] items-start gap-x-4 sm:grid-cols-[160px_minmax(0,1fr)] lg:order-none lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:items-stretch lg:gap-x-0">
           <p className="col-span-2 mb-4 text-lg font-black text-[var(--color-text-primary)] lg:mb-0 lg:text-2xl">
             Level:{" "}
@@ -507,7 +624,6 @@ function GamePage({
             </p>
 
             <div className="mt-3 flex aspect-square w-full items-center justify-center rounded-[22px] border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] lg:mt-4 lg:w-[240px] lg:rounded-[28px]">
-
               {!isLoadingPuzzle && puzzleError && (
                 <p className="px-4 text-center text-sm font-bold text-[var(--color-emphasis)]">
                   {puzzleError}
@@ -531,12 +647,21 @@ function GamePage({
             </p>
 
             <p className="mt-2 text-2xl font-black text-[var(--color-emphasis)]">
-              {formatTime(elapsedMilliseconds)}
+              {formatTime(displayedElapsedMilliseconds)}
             </p>
 
             <p className="mt-2 text-[10px] font-bold text-[var(--color-text-primary)] opacity-70">
               {stepsLeft} steps left
             </p>
+
+            {isPenaltyMode && (
+              <PenaltyStatus
+                freeStepsLeft={freeStepsLeft}
+                totalPenaltyMilliseconds={totalPenaltyMilliseconds}
+                puzzlePenaltyMilliseconds={puzzlePenaltyMilliseconds}
+                compact
+              />
+            )}
           </div>
         </aside>
 
@@ -624,7 +749,6 @@ function GamePage({
                 })}
               </div>
 
-
               {isGameComplete && (
                 <p className="text-sm font-black text-green-300">
                   Completed all puzzles!
@@ -641,8 +765,16 @@ function GamePage({
             </p>
 
             <p className="mt-4 text-4xl font-black text-[var(--color-text-primary)]">
-              {formatTime(elapsedMilliseconds)}
+              {formatTime(displayedElapsedMilliseconds)}
             </p>
+
+            {isPenaltyMode && (
+              <PenaltyStatus
+                freeStepsLeft={freeStepsLeft}
+                totalPenaltyMilliseconds={totalPenaltyMilliseconds}
+                puzzlePenaltyMilliseconds={puzzlePenaltyMilliseconds}
+              />
+            )}
           </div>
 
           <div className="w-full px-2 py-2 lg:w-auto">
