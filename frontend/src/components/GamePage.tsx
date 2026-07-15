@@ -24,6 +24,7 @@ type GamePageProps = {
   onOpenAuthModal: (score: CompletedScore) => void;
   onViewLeaderboard: (score: CompletedScore) => void | Promise<void>;
   onGameProgressChange: (shouldWarn: boolean) => void;
+  isTutorialActive?: boolean;
 };
 
 type Axis = "X" | "Y" | "Z";
@@ -178,6 +179,7 @@ function PenaltyStatus({
 }) {
   return (
     <div
+      data-tutorial="penalty-status"
       className={`font-bold ${
         compact ? "mt-3 text-[10px]" : "mt-4 text-sm"
       }`}
@@ -216,7 +218,10 @@ function ProgressGrid({
   );
 
   return (
-    <div className="grid grid-cols-5 gap-2 lg:grid-cols-2 lg:gap-2.5">
+    <div
+      data-tutorial="progress-grid"
+      className="grid grid-cols-5 gap-2 lg:grid-cols-2 lg:gap-2.5"
+    >
       {steps.map((step) => {
         const isDone =
           isGameComplete ||
@@ -313,9 +318,11 @@ function GamePage({
   onOpenAuthModal,
   onViewLeaderboard,
   onGameProgressChange,
+  isTutorialActive = false,
 }: GamePageProps) {
   const difficultyName = difficultyNames[difficultyIndex] ?? "Easy";
   const isPenaltyMode = difficultyName === "Difficult";
+  const shouldShowPenaltyStatus = isPenaltyMode || isTutorialActive;
 
   const [elapsedMilliseconds, setElapsedMilliseconds] = useState(0);
   const [finalElapsedMilliseconds, setFinalElapsedMilliseconds] =
@@ -444,12 +451,12 @@ function GamePage({
   }, [difficultyName]);
 
   useEffect(() => {
-    onGameProgressChange(!isGameComplete);
+    onGameProgressChange(!isGameComplete && !isTutorialActive);
 
     return () => {
       onGameProgressChange(false);
     };
-  }, [isGameComplete, onGameProgressChange]);
+  }, [isGameComplete, isTutorialActive, onGameProgressChange]);
 
   useEffect(() => {
     timerStartRef.current = performance.now();
@@ -469,7 +476,7 @@ function GamePage({
   }, [loadPuzzle]);
 
   useEffect(() => {
-    if (isGameComplete) return;
+    if (isGameComplete || isTutorialActive) return;
 
     const timer = window.setInterval(() => {
       const elapsed = Math.floor(performance.now() - timerStartRef.current);
@@ -477,7 +484,7 @@ function GamePage({
     }, 10);
 
     return () => window.clearInterval(timer);
-  }, [isGameComplete]);
+  }, [isGameComplete, isTutorialActive]);
 
   useEffect(() => {
     return () => {
@@ -589,10 +596,19 @@ function GamePage({
   const displayedElapsedMilliseconds =
     elapsedMilliseconds + totalPenaltyMilliseconds;
 
-  const freeStepsLeft = Math.max(
-    difficultFreeRotationSteps - puzzleRotationCount,
-    0
-  );
+  const freeStepsLeft = isTutorialActive && !isPenaltyMode
+  ? 0
+  : Math.max(difficultFreeRotationSteps - puzzleRotationCount, 0);
+
+const displayedTotalPenaltyMilliseconds =
+  isTutorialActive && !isPenaltyMode
+    ? difficultPenaltyPerExtraRotationMilliseconds
+    : totalPenaltyMilliseconds;
+
+const displayedPuzzlePenaltyMilliseconds =
+  isTutorialActive && !isPenaltyMode
+    ? difficultPenaltyPerExtraRotationMilliseconds
+    : puzzlePenaltyMilliseconds;
 
   const stepsLeft = Math.max(
     totalProgressSteps -
@@ -623,7 +639,10 @@ function GamePage({
               Target
             </p>
 
-            <div className="mt-3 flex aspect-square w-full items-center justify-center rounded-[22px] border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] lg:mt-4 lg:w-[240px] lg:rounded-[28px]">
+            <div
+              data-tutorial="target-block"
+              className="mt-3 flex aspect-square w-full items-center justify-center rounded-[22px] border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] lg:mt-4 lg:w-[240px] lg:rounded-[28px]"
+            >
               {!isLoadingPuzzle && puzzleError && (
                 <p className="px-4 text-center text-sm font-bold text-[var(--color-emphasis)]">
                   {puzzleError}
@@ -654,11 +673,11 @@ function GamePage({
               {stepsLeft} steps left
             </p>
 
-            {isPenaltyMode && (
+            {shouldShowPenaltyStatus && (
               <PenaltyStatus
                 freeStepsLeft={freeStepsLeft}
-                totalPenaltyMilliseconds={totalPenaltyMilliseconds}
-                puzzlePenaltyMilliseconds={puzzlePenaltyMilliseconds}
+                totalPenaltyMilliseconds={displayedTotalPenaltyMilliseconds}
+                puzzlePenaltyMilliseconds={displayedPuzzlePenaltyMilliseconds}
                 compact
               />
             )}
@@ -667,6 +686,7 @@ function GamePage({
 
         <main className="order-2 flex min-h-0 flex-col gap-4 lg:order-none lg:h-full lg:gap-5">
           <div
+            data-tutorial="player-block"
             className={`mx-auto flex aspect-square w-full max-w-[330px] items-center justify-center rounded-[28px] border transition-colors duration-200 lg:w-[min(36vw,430px)] lg:max-w-none lg:rounded-[32px] ${
               isSolved
                 ? "border-4 border-green-300 bg-green-400/45 ring-4 ring-green-300/80"
@@ -694,7 +714,10 @@ function GamePage({
             </p>
 
             <div className="mt-4 flex flex-col items-center gap-3">
-              <div className="flex items-center justify-center gap-2 lg:gap-3">
+              <div
+                data-tutorial="rotation-step-buttons"
+                className="flex items-center justify-center gap-2 lg:gap-3"
+              >
                 {([-90, -45, 45, 90] as RotationStep[]).map((step) => {
                   const isActive = selectedRotationStep === step;
 
@@ -716,7 +739,10 @@ function GamePage({
                 })}
               </div>
 
-              <div className="flex items-center justify-center gap-2 lg:gap-3">
+              <div
+                data-tutorial="rotation-axis-buttons"
+                className="flex items-center justify-center gap-2 lg:gap-3"
+              >
                 {(["X", "Y", "Z"] as Axis[]).map((axis) => {
                   const isHighlightedAxis = highlightedAxis === axis;
 
@@ -759,7 +785,10 @@ function GamePage({
         </main>
 
         <aside className="order-3 flex min-h-0 flex-col items-center gap-5 pb-8 lg:order-none lg:h-full lg:items-stretch lg:gap-4 lg:pb-0">
-          <div className="hidden px-2 py-2 lg:block">
+          <div
+            data-tutorial="timer-panel"
+            className="hidden px-2 py-2 lg:block"
+          >
             <p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--color-emphasis)]">
               Time Elapsed
             </p>
@@ -768,13 +797,13 @@ function GamePage({
               {formatTime(displayedElapsedMilliseconds)}
             </p>
 
-            {isPenaltyMode && (
-              <PenaltyStatus
-                freeStepsLeft={freeStepsLeft}
-                totalPenaltyMilliseconds={totalPenaltyMilliseconds}
-                puzzlePenaltyMilliseconds={puzzlePenaltyMilliseconds}
-              />
-            )}
+            {shouldShowPenaltyStatus && (
+  <PenaltyStatus
+    freeStepsLeft={freeStepsLeft}
+    totalPenaltyMilliseconds={displayedTotalPenaltyMilliseconds}
+    puzzlePenaltyMilliseconds={displayedPuzzlePenaltyMilliseconds}
+  />
+)}
           </div>
 
           <div className="w-full px-2 py-2 lg:w-auto">
@@ -794,6 +823,7 @@ function GamePage({
 
               <button
                 type="button"
+                data-tutorial="reset-button"
                 onClick={handleReset}
                 className="mt-5 w-full rounded-xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] px-4 py-2 text-base font-black text-[var(--color-text-primary)] transition hover:border-[var(--color-emphasis)] hover:bg-[var(--color-emphasis)] hover:text-[var(--color-emphasis-contrast)] disabled:cursor-not-allowed disabled:opacity-40"
               >

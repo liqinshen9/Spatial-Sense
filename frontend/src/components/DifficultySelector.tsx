@@ -40,6 +40,7 @@ function DifficultySelector({
   return (
     <div
       key={shakeKey}
+      data-tutorial="difficulty-selector"
       className="flex w-full flex-col gap-2 sm:w-auto"
       style={{
         animation:

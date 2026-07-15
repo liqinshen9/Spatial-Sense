@@ -13,6 +13,8 @@ import LeaderboardPage from "./components/Leaderboard";
 import AuthModal from "./components/AuthModel";
 import ConfirmModal from "./components/ConfirmModal";
 import ProfileModal from "./components/ProfileModal";
+import TutorialOverlay from "./components/TutorialOverlay";
+import type { TutorialStep } from "./components/TutorialOverlay";
 import type { CompletedScore } from "./components/GamePage";
 import type { AuthUser } from "./types/auth";
 import { createScore } from "./api/scores";
@@ -25,6 +27,80 @@ import {
 
 const USER_STORAGE_KEY = "spatialSenseUser";
 const SOUND_STORAGE_KEY = "spatialSenseSoundEnabled";
+const TUTORIAL_STORAGE_KEY = "spatialSenseTutorialSeen";
+
+const tutorialSteps: TutorialStep[] = [
+  {
+    route: "/",
+    target: "tutorial-button",
+    title: "Tutorial",
+    description:
+      "You can replay this guide anytime from the Tutorial button in the navbar.",
+  },
+  {
+    route: "/",
+    target: "difficulty-selector",
+    title: "Choose Difficulty",
+    description:
+      "Use this slider to choose Easy, Medium, or Difficult before starting the game.",
+  },
+  {
+    route: "/",
+    target: "start-game",
+    title: "Start Game",
+    description:
+      "When you are ready, start the game. The goal is to rotate your block until it matches the target.",
+  },
+  {
+    route: "/game",
+    target: "target-block",
+    title: "Target Block",
+    description:
+      "This is the target orientation. Try to make your block look exactly like this.",
+  },
+  {
+    route: "/game",
+    target: "player-block",
+    title: "Your Block",
+    description:
+      "This is the block you control. Rotate it until it matches the target block.",
+  },
+  {
+    route: "/game",
+    target: "rotation-step-buttons",
+    title: "Rotation Step",
+    description:
+      "Choose how many degrees each rotation should apply. Some puzzles need smaller 45 degree rotations.",
+  },
+  {
+    route: "/game",
+    target: "rotation-axis-buttons",
+    title: "Rotate X, Y, and Z",
+    description:
+      "Use these buttons to rotate the block around different axes. Try different directions to match the target.",
+  },
+  {
+    route: "/game",
+    target: "progress-grid",
+    title: "Progress",
+    description:
+      "Each tick means one puzzle is completed. Finish all puzzles to complete the game.",
+  },
+  {
+    route: "/game",
+    target: "timer-panel",
+    title: "Timer and Penalty",
+    description:
+      "Your score is based on time. In Easy and Medium mode, there is no penalty. In Difficult mode, extra rotations after the free steps add time penalty.",
+  },
+  {
+    route: "/game",
+    target: "reset-button",
+    title: "Reset",
+    description:
+      "Reset only resets the current block orientation. It does not reset the timer or penalty.",
+  },
+];
 
 function App() {
   const navigate = useNavigate();
@@ -48,6 +124,9 @@ function App() {
 
   const [isLeaveGameModalOpen, setIsLeaveGameModalOpen] = useState(false);
 
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [tutorialStepIndex, setTutorialStepIndex] = useState(0);
+
   const pendingLeaveActionRef = useRef<(() => void) | null>(null);
   const isSavingScoreRef = useRef(false);
 
@@ -66,7 +145,35 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!shouldWarnBeforeLeavingGame || location.pathname !== "/game") {
+    const hasSeenTutorial =
+      localStorage.getItem(TUTORIAL_STORAGE_KEY) === "true";
+
+    if (!hasSeenTutorial) {
+      setTutorialStepIndex(0);
+      setIsTutorialOpen(true);
+      navigate("/", { replace: true });
+    }
+  }, [navigate]);
+
+    useEffect(() => {
+    if (!isTutorialOpen) return;
+
+    const currentStep = tutorialSteps[tutorialStepIndex];
+
+    if (!currentStep) return;
+
+    if (location.pathname !== currentStep.route) {
+      setShouldWarnBeforeLeavingGame(false);
+      navigate(currentStep.route);
+    }
+  }, [isTutorialOpen, tutorialStepIndex, location.pathname, navigate]);
+
+  useEffect(() => {
+    if (
+      !shouldWarnBeforeLeavingGame ||
+      location.pathname !== "/game" ||
+      isTutorialOpen
+    ) {
       return;
     }
 
@@ -80,7 +187,7 @@ function App() {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [location.pathname, shouldWarnBeforeLeavingGame]);
+  }, [location.pathname, shouldWarnBeforeLeavingGame, isTutorialOpen]);
 
   function handleToggleSound() {
     const nextValue = !isSoundEnabled;
@@ -100,7 +207,11 @@ function App() {
   }
 
   function requestLeaveGame(actionAfterLeaving: () => void) {
-    if (location.pathname !== "/game" || !shouldWarnBeforeLeavingGame) {
+    if (
+      location.pathname !== "/game" ||
+      !shouldWarnBeforeLeavingGame ||
+      isTutorialOpen
+    ) {
       actionAfterLeaving();
       return;
     }
@@ -204,6 +315,58 @@ function App() {
     setIsAuthModalOpen(false);
   }
 
+  function handleStartTutorial() {
+    requestLeaveGame(() => {
+      setIsAuthModalOpen(false);
+      setIsProfileModalOpen(false);
+      setPendingScore(null);
+      setShouldWarnBeforeLeavingGame(false);
+      setTutorialStepIndex(0);
+      setIsTutorialOpen(true);
+      navigate("/");
+    });
+  }
+
+  function closeTutorial() {
+    localStorage.setItem(TUTORIAL_STORAGE_KEY, "true");
+    setIsTutorialOpen(false);
+    setTutorialStepIndex(0);
+    setShouldWarnBeforeLeavingGame(false);
+
+    if (location.pathname === "/game") {
+      navigate("/");
+    }
+  }
+
+  function goToTutorialStep(nextIndex: number) {
+  const safeNextIndex = Math.min(
+    Math.max(nextIndex, 0),
+    tutorialSteps.length - 1
+  );
+
+  const nextStep = tutorialSteps[safeNextIndex];
+
+  setTutorialStepIndex(safeNextIndex);
+  setShouldWarnBeforeLeavingGame(false);
+
+  if (location.pathname !== nextStep.route) {
+    navigate(nextStep.route);
+  }
+}
+
+function handleTutorialNext() {
+  if (tutorialStepIndex >= tutorialSteps.length - 1) {
+    closeTutorial();
+    return;
+  }
+
+  goToTutorialStep(tutorialStepIndex + 1);
+}
+
+function handleTutorialBack() {
+  goToTutorialStep(tutorialStepIndex - 1);
+}
+
   async function saveScoreAndOpenLeaderboard(
     score: CompletedScore,
     userOverride?: AuthUser
@@ -266,6 +429,7 @@ function App() {
         onLoginClick={handleGuardedLoginClick}
         onLogout={handleLogout}
         onProfileClick={handleOpenProfileModal}
+        onStartTutorial={handleStartTutorial}
       />
 
       <Routes>
@@ -289,6 +453,7 @@ function App() {
               onOpenAuthModal={handleOpenAuthModal}
               onViewLeaderboard={saveScoreAndOpenLeaderboard}
               onGameProgressChange={setShouldWarnBeforeLeavingGame}
+              isTutorialActive={isTutorialOpen}
             />
           }
         />
@@ -331,6 +496,16 @@ function App() {
           confirmText="Leave"
           onCancel={handleStayOnGame}
           onConfirm={handleConfirmLeaveGame}
+        />
+      )}
+
+      {isTutorialOpen && (
+        <TutorialOverlay
+          steps={tutorialSteps}
+          currentStepIndex={tutorialStepIndex}
+          onNext={handleTutorialNext}
+          onBack={handleTutorialBack}
+          onSkip={closeTutorial}
         />
       )}
     </main>

@@ -14,6 +14,7 @@ type NavbarProps = {
   onLogout: () => void;
   onNavigateRequest: (path: string) => void;
   onProfileClick: () => void;
+  onStartTutorial: () => void;
 };
 
 function getAvatarSrc(avatarUrl: string | null) {
@@ -36,6 +37,7 @@ function Navbar({
   onLogout,
   onNavigateRequest,
   onProfileClick,
+  onStartTutorial,
 }: NavbarProps) {
   function getNavClass({ isActive }: { isActive: boolean }) {
     return isActive
@@ -102,6 +104,15 @@ function Navbar({
         >
           Leaderboard
         </NavLink>
+
+        <button
+          type="button"
+          data-tutorial="tutorial-button"
+          onClick={onStartTutorial}
+          className="whitespace-nowrap px-2 py-2 text-xs font-bold transition hover:text-[var(--color-emphasis)] sm:px-5 sm:text-sm"
+        >
+          Tutorial
+        </button>
       </div>
 
       {currentUser ? (

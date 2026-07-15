@@ -31,6 +31,7 @@ function HeroSection({
           <button
             type="button"
             data-sound="start-game"
+            data-tutorial="start-game"
             onClick={() => navigate("/game")}
             className="rounded-xl bg-[var(--color-emphasis)] px-7 py-3 text-base font-black text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)] sm:px-8 sm:py-4 sm:text-lg"
           >
