@@ -660,7 +660,10 @@ const displayedPuzzlePenaltyMilliseconds =
             </div>
           </div>
 
-          <div className="flex min-w-0 flex-col items-center justify-center pt-8 text-center lg:hidden">
+          <div
+            data-tutorial="timer-panel"
+            className="flex min-w-0 flex-col items-center justify-center pt-8 text-center lg:hidden"
+          >
             <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[var(--color-text-primary)]">
               Time Elapsed
             </p>
