@@ -28,6 +28,7 @@ import {
 const USER_STORAGE_KEY = "spatialSenseUser";
 const SOUND_STORAGE_KEY = "spatialSenseSoundEnabled";
 const TUTORIAL_STORAGE_KEY = "spatialSenseTutorialSeen";
+const TUTORIAL_DIFFICULTY_INDEX = 2;
 
 const tutorialSteps: TutorialStep[] = [
   {
@@ -35,14 +36,14 @@ const tutorialSteps: TutorialStep[] = [
     target: "tutorial-button",
     title: "Tutorial",
     description:
-      "You can replay this guide anytime from the Tutorial button in the navbar.",
+      "You can replay this guide anytime from the Tutorial button in the navbar. Click Skip to exit the tutorial mode.",
   },
   {
     route: "/",
     target: "difficulty-selector",
     title: "Choose Difficulty",
     description:
-      "Use this slider to choose Easy, Medium, or Difficult before starting the game.",
+      "Use this slider to choose Easy, Medium, or Difficult before starting.",
   },
   {
     route: "/",
@@ -149,13 +150,14 @@ function App() {
       localStorage.getItem(TUTORIAL_STORAGE_KEY) === "true";
 
     if (!hasSeenTutorial) {
+      setDifficultyIndex(TUTORIAL_DIFFICULTY_INDEX);
       setTutorialStepIndex(0);
       setIsTutorialOpen(true);
       navigate("/", { replace: true });
     }
   }, [navigate]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (!isTutorialOpen) return;
 
     const currentStep = tutorialSteps[tutorialStepIndex];
@@ -321,6 +323,7 @@ function App() {
       setIsProfileModalOpen(false);
       setPendingScore(null);
       setShouldWarnBeforeLeavingGame(false);
+      setDifficultyIndex(TUTORIAL_DIFFICULTY_INDEX);
       setTutorialStepIndex(0);
       setIsTutorialOpen(true);
       navigate("/");
@@ -439,6 +442,7 @@ function handleTutorialBack() {
             <HeroSection
               difficultyIndex={difficultyIndex}
               onDifficultyChange={setDifficultyIndex}
+              isTutorialActive={isTutorialOpen}
             />
           }
         />

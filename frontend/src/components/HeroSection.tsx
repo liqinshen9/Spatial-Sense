@@ -5,11 +5,13 @@ import HomeBlocks from "./HomeBlocks";
 type HeroSectionProps = {
   difficultyIndex: number;
   onDifficultyChange: (nextDifficulty: number) => void;
+  isTutorialActive?: boolean;
 };
 
 function HeroSection({
   difficultyIndex,
   onDifficultyChange,
+  isTutorialActive = false,
 }: HeroSectionProps) {
   const navigate = useNavigate();
 
@@ -41,6 +43,7 @@ function HeroSection({
           <DifficultySelector
             difficultyIndex={difficultyIndex}
             onDifficultyChange={onDifficultyChange}
+            isTutorialActive={isTutorialActive}
           />
         </div>
       </div>

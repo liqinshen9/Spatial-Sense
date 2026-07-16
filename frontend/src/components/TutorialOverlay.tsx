@@ -107,13 +107,19 @@ if (!(targetElement instanceof HTMLElement)) {
         hasScrolledToTargetRef.current = true;
 
         const isMobile = window.innerWidth < 1024;
-        const shouldJumpDirectlyToReset =
-            isMobile && currentStep.target === "reset-button";
+
+        const shouldJumpDirectlyOnMobile =
+        isMobile &&
+        (currentStep.target === "rotation-step-buttons" ||
+            currentStep.target === "rotation-axis-buttons" ||
+            currentStep.target === "progress-grid" ||
+            currentStep.target === "timer-panel" ||
+            currentStep.target === "reset-button");
 
         targetElement.scrollIntoView({
             block: "center",
             inline: "center",
-            behavior: shouldJumpDirectlyToReset ? "auto" : "smooth",
+            behavior: shouldJumpDirectlyOnMobile ? "auto" : "smooth",
         });
         }
 
