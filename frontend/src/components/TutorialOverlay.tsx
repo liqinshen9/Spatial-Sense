@@ -37,6 +37,13 @@ type TooltipSize = {
 
 type Vec3 = [number, number, number];
 
+function getCssVariableValue(variableName: string) {
+  if (typeof window === "undefined") return "";
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(variableName)
+    .trim();
+}
+
 const currentRotation = new Quaternion();
 
 const resultRotation = new Quaternion().setFromAxisAngle(
@@ -124,28 +131,37 @@ function AxisArrow({
 }
 
 function SimpleAxisGuide() {
+  const axisColors = useMemo(
+    () => ({
+      x: getCssVariableValue("--color-axis-x"),
+      y: getCssVariableValue("--color-axis-y"),
+      z: getCssVariableValue("--color-axis-z"),
+    }),
+    []
+  );
+
   return (
     <group>
-      <AxisLine start={[-2.75, 0, 0]} end={[2.75, 0, 0]} color="#ffffff" />
-      <AxisLine start={[0, -2.75, 0]} end={[0, 2.75, 0]} color="#fffa17" />
-      <AxisLine start={[0, 0, -2.75]} end={[0, 0, 2.75]} color="#00d4ff" />
+      <AxisLine start={[-2.75, 0, 0]} end={[2.75, 0, 0]} color={axisColors.x} />
+      <AxisLine start={[0, -2.75, 0]} end={[0, 2.75, 0]} color={axisColors.y} />
+      <AxisLine start={[0, 0, -2.75]} end={[0, 0, 2.75]} color={axisColors.z} />
 
       <AxisArrow
         position={[2.95, 0, 0]}
         direction={[1, 0, 0]}
-        color="#ffffff"
+        color={axisColors.x}
       />
 
       <AxisArrow
         position={[0, 2.95, 0]}
         direction={[0, 1, 0]}
-        color="#fffa17"
+        color={axisColors.y}
       />
 
       <AxisArrow
         position={[0, 0, 2.95]}
         direction={[0, 0, 1]}
-        color="#00d4ff"
+        color={axisColors.z}
       />
     </group>
   );
@@ -153,9 +169,13 @@ function SimpleAxisGuide() {
 function DemoCube({
   position,
   isAccent,
+  accentColor,
+  mainColor,
 }: {
   position: Vec3;
   isAccent: boolean;
+  accentColor: string;
+  mainColor: string;
 }) {
   const boxGeometry = useMemo(() => {
     return new BoxGeometry(1, 1, 1);
@@ -169,14 +189,18 @@ function DemoCube({
     <group position={position}>
       <mesh geometry={boxGeometry}>
         <meshStandardMaterial
-          color={isAccent ? "#fffa17" : "#002fa5"}
+          color={isAccent ? accentColor : mainColor}
           roughness={0.5}
           metalness={0.04}
         />
       </mesh>
 
       <lineSegments geometry={edgeGeometry}>
-        <lineBasicMaterial color="#ffffff" transparent opacity={0.95} />
+        <lineBasicMaterial
+          color={getCssVariableValue("--color-3d-edge")}
+          transparent
+          opacity={0.95}
+        />
       </lineSegments>
     </group>
   );
@@ -201,6 +225,14 @@ function DemoBlock({ rotation }: { rotation: Quaternion }) {
     });
   }, []);
 
+  const axisColors = useMemo(
+    () => ({
+      accent: getCssVariableValue("--color-3d-cube-accent"),
+      main: getCssVariableValue("--color-3d-cube-main"),
+    }),
+    []
+  );
+
   return (
     <group quaternion={rotation} scale={0.72}>
       {centeredPositions.map((position, index) => {
@@ -211,6 +243,8 @@ function DemoBlock({ rotation }: { rotation: Quaternion }) {
             key={`${position.join("-")}-${index}`}
             position={position}
             isAccent={isAccent}
+            accentColor={axisColors.accent}
+            mainColor={axisColors.main}
           />
         );
       })}
@@ -244,11 +278,11 @@ function DemoBlockCanvas({
           y
         </div>
 
-        <div className="pointer-events-none absolute right-7 top-1/2 z-10 -translate-y-1/2 text-2xl font-black text-white drop-shadow-[0_0_8px_white]">
+        <div className="pointer-events-none absolute right-7 top-1/2 z-10 -translate-y-1/2 text-2xl font-black text-[var(--color-white)] drop-shadow-[0_0_8px_var(--color-white)]">
           x
         </div>
 
-        <div className="pointer-events-none absolute bottom-6 left-7 z-10 text-2xl font-black text-[#00d4ff] drop-shadow-[0_0_8px_#00d4ff]">
+        <div className="pointer-events-none absolute bottom-6 left-7 z-10 text-2xl font-black text-[var(--color-axis-z)] drop-shadow-[0_0_8px_var(--color-axis-z)]">
           z
         </div>
 
@@ -348,11 +382,12 @@ function RotationDemoModal({
           <button
             type="button"
             onClick={onSkip}
-            className="absolute right-0 top-0 grid h-11 w-11 place-items-center rounded-full bg-[var(--color-leaderboard-row)] text-3xl leading-none text-[var(--color-text-primary)] transition hover:text-[var(--color-emphasis)]"
+            className="group absolute right-0 top-0 h-11 w-11 rounded-full bg-[var(--color-leaderboard-row)] transition"
             aria-label="Close tutorial"
-          >
-            ×
-          </button>
+            >
+            <span className="absolute left-1/2 top-1/2 h-[3px] w-5 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-[var(--color-text-primary)] transition group-hover:bg-[var(--color-emphasis)]" />
+            <span className="absolute left-1/2 top-1/2 h-[3px] w-5 -translate-x-1/2 -translate-y-1/2 -rotate-45 rounded-full bg-[var(--color-text-primary)] transition group-hover:bg-[var(--color-emphasis)]" />
+            </button>
         </div>
 
         <p className="mt-6 text-center text-sm font-bold leading-6 opacity-85 sm:text-base">

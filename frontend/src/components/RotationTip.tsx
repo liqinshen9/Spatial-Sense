@@ -12,6 +12,13 @@ import type { BlockOrientation, CubeDto } from "../types/puzzle";
 
 type Vec3 = [number, number, number];
 
+function getCssVariableValue(variableName: string) {
+  if (typeof window === "undefined") return "";
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(variableName)
+    .trim();
+}
+
 type RotationTipProps = {
   cubes: CubeDto[];
   orientation: BlockOrientation;
@@ -152,28 +159,37 @@ function AxisArrow({
 }
 
 function AxisGuide() {
+  const axisColors = useMemo(
+    () => ({
+      x: getCssVariableValue("--color-axis-x"),
+      y: getCssVariableValue("--color-axis-y"),
+      z: getCssVariableValue("--color-axis-z"),
+    }),
+    []
+  );
+
   return (
     <group>
-      <AxisLine start={[-3.1, 0, 0]} end={[3.1, 0, 0]} color="#ffffff" />
-      <AxisLine start={[0, -3.1, 0]} end={[0, 3.1, 0]} color="#fffa17" />
-      <AxisLine start={[0, 0, -3.1]} end={[0, 0, 3.1]} color="#00d4ff" />
+      <AxisLine start={[-3.1, 0, 0]} end={[3.1, 0, 0]} color={axisColors.x} />
+      <AxisLine start={[0, -3.1, 0]} end={[0, 3.1, 0]} color={axisColors.y} />
+      <AxisLine start={[0, 0, -3.1]} end={[0, 0, 3.1]} color={axisColors.z} />
 
       <AxisArrow
         position={[3.28, 0, 0]}
         direction={[1, 0, 0]}
-        color="#ffffff"
+        color={axisColors.x}
       />
 
       <AxisArrow
         position={[0, 3.28, 0]}
         direction={[0, 1, 0]}
-        color="#fffa17"
+        color={axisColors.y}
       />
 
       <AxisArrow
         position={[0, 0, 3.28]}
         direction={[0, 0, 1]}
-        color="#00d4ff"
+        color={axisColors.z}
       />
     </group>
   );
@@ -205,7 +221,11 @@ function CubePiece({
       </mesh>
 
       <lineSegments geometry={edgeGeometry}>
-        <lineBasicMaterial color="#ffffff" transparent opacity={0.92} />
+        <lineBasicMaterial
+          color={getCssVariableValue("--color-3d-edge")}
+          transparent
+          opacity={0.92}
+        />
       </lineSegments>
     </group>
   );
@@ -255,7 +275,9 @@ function BlockTree({
   return (
     <group ref={groupRef} quaternion={quaternion} scale={blockScale}>
       {centeredCubes.map((cube, index) => {
-        const color = cube.colorIndex === 1 ? "#fffa17" : "#002fa5";
+        const color = cube.colorIndex === 1
+          ? getCssVariableValue("--color-axis-y")
+          : getCssVariableValue("--color-bg-primary");
 
         return (
           <CubePiece
@@ -296,11 +318,11 @@ function BlockPreviewCanvas({
         Y
       </div>
 
-      <div className="pointer-events-none absolute right-6 top-1/2 z-10 -translate-y-1/2 text-2xl font-black text-white drop-shadow-[0_0_8px_white]">
+      <div className="pointer-events-none absolute right-6 top-1/2 z-10 -translate-y-1/2 text-2xl font-black text-[var(--color-white)] drop-shadow-[0_0_8px_var(--color-white)]">
         X
       </div>
 
-      <div className="pointer-events-none absolute bottom-5 left-5 z-10 text-2xl font-black text-[#00d4ff] drop-shadow-[0_0_8px_#00d4ff]">
+      <div className="pointer-events-none absolute bottom-5 left-5 z-10 text-2xl font-black text-[var(--color-axis-z)] drop-shadow-[0_0_8px_var(--color-axis-z)]">
         Z
       </div>
 

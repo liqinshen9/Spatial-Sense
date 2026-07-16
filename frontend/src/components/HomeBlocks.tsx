@@ -11,6 +11,13 @@ type BlockTransform = {
   scale: number;
 };
 
+function getCssVariableValue(variableName: string) {
+  if (typeof window === "undefined") return "";
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(variableName)
+    .trim();
+}
+
 const baseBlockShape: CubePosition[] = [
   [0, 2, 0],
   [0, 1, 0],
@@ -67,21 +74,36 @@ function getCenteredCubes(cubes: CubePosition[]): CubePosition[] {
 }
 
 function Cube({ position }: { position: CubePosition }) {
+  const cubeColor = useMemo(
+    () => getCssVariableValue("--color-homeblocks-cube-main"),
+    []
+  );
+
+  const cubeEmissive = useMemo(
+    () => getCssVariableValue("--color-homeblocks-cube-emissive"),
+    []
+  );
+
+  const edgeColor = useMemo(
+    () => getCssVariableValue("--color-homeblocks-edge"),
+    []
+  );
+
   return (
     <group position={position}>
       <mesh geometry={boxGeometry} castShadow receiveShadow>
         <meshStandardMaterial
-          color="#8ee7ff"
+          color={cubeColor}
           roughness={0.42}
           metalness={0.02}
-          emissive="#00aee6"
+          emissive={cubeEmissive}
           emissiveIntensity={0.08}
           side={2}
         />
       </mesh>
 
       <lineSegments geometry={edgeGeometry} raycast={() => null}>
-        <lineBasicMaterial color="#ffffff" />
+        <lineBasicMaterial color={edgeColor} />
       </lineSegments>
     </group>
   );

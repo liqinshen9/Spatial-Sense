@@ -198,7 +198,7 @@ function ProfileModal({
             data-sound="off"
             onClick={handleDeleteAccount}
             disabled={isDeleting}
-            className="w-full rounded-xl border border-red-500 px-4 py-3 text-sm font-black text-red-500 transition hover:bg-red-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-xl border border-[var(--color-error-border)] px-4 py-3 text-sm font-black text-[var(--color-error-border)] transition hover:bg-[var(--color-error-border)] hover:text-[var(--color-error-contrast)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isDeleting
               ? "Deleting..."

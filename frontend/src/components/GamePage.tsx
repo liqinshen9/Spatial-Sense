@@ -190,11 +190,11 @@ function PenaltyStatus({
           : "No free steps left"}
       </p>
 
-      <p className="mt-2 text-red-300">
+      <p className="mt-2 text-[var(--color-error-soft)]">
         Total Penalty: +{formatPenalty(totalPenaltyMilliseconds)}s
       </p>
 
-      <p className="mt-1 text-red-300">
+      <p className="mt-1 text-[var(--color-error-soft)]">
         (This puzzle: +{formatPenalty(puzzlePenaltyMilliseconds)}s)
       </p>
     </div>
@@ -692,7 +692,7 @@ const displayedPuzzlePenaltyMilliseconds =
             data-tutorial="player-block"
             className={`relative mx-auto flex aspect-square w-full max-w-[330px] items-center justify-center rounded-[28px] border transition-colors duration-200 lg:w-[min(36vw,430px)] lg:max-w-none lg:rounded-[32px] ${
               isSolved
-                ? "border-4 border-green-300 bg-green-400/45 ring-4 ring-green-300/80"
+                ? "border-4 border-[var(--color-success-border)] bg-[var(--color-success-bg)] ring-4 ring-[var(--color-success-ring)]"
                 : "border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)]"
             }`}
           >
@@ -779,7 +779,7 @@ const displayedPuzzlePenaltyMilliseconds =
               </div>
 
               {isGameComplete && (
-                <p className="text-sm font-black text-green-300">
+                <p className="text-sm font-black text-[var(--color-success-border)]">
                   Completed all puzzles!
                 </p>
               )}

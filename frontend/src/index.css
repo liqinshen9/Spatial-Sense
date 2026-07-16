@@ -17,6 +17,25 @@
 
   --color-leaderboard-card: rgba(255, 255, 255, 0.08);
   --color-leaderboard-row: rgba(255, 255, 255, 0.08);
+  --color-overlay: rgba(0, 0, 0, 0.55);
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-error-border: #ef4444;
+  --color-error-soft: #fca5a5;
+  --color-error-bg: rgba(239, 68, 68, 0.12);
+  --color-error-contrast: #ffffff;
+  --color-success-border: #86efac;
+  --color-success-bg: rgba(74, 222, 128, 0.45);
+  --color-success-ring: rgba(134, 239, 172, 0.8);
+  --color-3d-cube-main: #0f358f;
+  --color-3d-cube-accent: #fffb1b;
+  --color-3d-edge: #ffffff;
+  --color-homeblocks-cube-main: #8ee7ff;
+  --color-homeblocks-cube-emissive: #00aee6;
+  --color-homeblocks-edge: #ffffff;
+  --color-axis-x: #ffffff;
+  --color-axis-y: #fffa17;
+  --color-axis-z: #00d4ff;
 }
 
 .app-shell.theme-light {

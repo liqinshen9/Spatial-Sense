@@ -24,13 +24,20 @@ type CenteredCube = {
   colorIndex: number;
 };
 
+function getCssVariableValue(variableName: string) {
+  if (typeof window === "undefined") return "";
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(variableName)
+    .trim();
+}
+
 const boxGeometry = new BoxGeometry(1, 1, 1);
 const edgeGeometry = new EdgesGeometry(boxGeometry);
 
 const cubeColors = {
-  blue: "#0f358f",
-  yellow: "#fffb1b",
-  edge: "#ffffff",
+  blue: getCssVariableValue("--color-3d-cube-main"),
+  yellow: getCssVariableValue("--color-3d-cube-accent"),
+  edge: getCssVariableValue("--color-3d-edge"),
 };
 
 function getCenteredCubes(cubes: CubeDto[]): CenteredCube[] {
@@ -144,6 +151,15 @@ function PuzzleBlockCanvas({
   orientation,
   size = "main",
 }: PuzzleBlockCanvasProps) {
+  const cubeColors = useMemo(
+    () => ({
+      blue: getCssVariableValue("--color-3d-cube-main"),
+      yellow: getCssVariableValue("--color-3d-cube-accent"),
+      edge: getCssVariableValue("--color-3d-edge"),
+    }),
+    []
+  );
+
   return (
     <Canvas
       camera={{

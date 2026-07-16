@@ -71,7 +71,7 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
 
   function getInputClass(hasError: boolean) {
     return `mt-3 w-full rounded-xl border ${
-      hasError ? "border-red-500" : "border-[var(--color-nav-border)]"
+      hasError ? "border-[var(--color-error-border)] text-[var(--color-error-border)]" : "border-[var(--color-nav-border)]"
     } bg-[var(--color-leaderboard-row)] px-4 py-3 text-base font-bold text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-primary)] placeholder:opacity-45 focus:border-[var(--color-emphasis)]`;
   }
 
