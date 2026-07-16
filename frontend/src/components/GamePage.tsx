@@ -690,7 +690,7 @@ const displayedPuzzlePenaltyMilliseconds =
         <main className="order-2 flex min-h-0 flex-col gap-4 lg:order-none lg:h-full lg:gap-5">
           <div
             data-tutorial="player-block"
-            className={`mx-auto flex aspect-square w-full max-w-[330px] items-center justify-center rounded-[28px] border transition-colors duration-200 lg:w-[min(36vw,430px)] lg:max-w-none lg:rounded-[32px] ${
+            className={`relative mx-auto flex aspect-square w-full max-w-[330px] items-center justify-center rounded-[28px] border transition-colors duration-200 lg:w-[min(36vw,430px)] lg:max-w-none lg:rounded-[32px] ${
               isSolved
                 ? "border-4 border-green-300 bg-green-400/45 ring-4 ring-green-300/80"
                 : "border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)]"

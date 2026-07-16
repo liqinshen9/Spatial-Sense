@@ -78,7 +78,7 @@ const tutorialSteps: TutorialStep[] = [
     target: "rotation-axis-buttons",
     title: "Rotate X, Y, and Z",
     description:
-      "Use these buttons to rotate the block around different axes. Try different directions to match the target.",
+      "Use these buttons to rotate the block around different axes.",
   },
   {
     route: "/game",
@@ -100,6 +100,14 @@ const tutorialSteps: TutorialStep[] = [
     title: "Reset",
     description:
       "Reset only resets the current block orientation. It does not reset the timer or penalty.",
+  },
+  {
+    route: "/game",
+    target: "rotation-axis-buttons",
+    title: "How to Play?",
+    description:
+      "This example shows how a 90° rotation around the Y axis changes the block.",
+    visual: "rotation-demo",
   },
 ];
 

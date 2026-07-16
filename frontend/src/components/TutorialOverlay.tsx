@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Canvas } from "@react-three/fiber";
+import {
+  BoxGeometry,
+  EdgesGeometry,
+  Quaternion,
+  Vector3,
+} from "three";
 
 export type TutorialStep = {
   route: string;
   target: string;
   title: string;
   description: string;
+  visual?: "rotation-demo";
 };
 
 type TutorialOverlayProps = {
@@ -27,8 +35,372 @@ type TooltipSize = {
   height: number;
 };
 
+type Vec3 = [number, number, number];
+
+const currentRotation = new Quaternion();
+
+const resultRotation = new Quaternion().setFromAxisAngle(
+  new Vector3(0, 1, 0),
+  Math.PI / 2
+);
+
+const demoBlockPositions: Vec3[] = [
+  [-1, -1, 0],
+  [0, -1, 0],
+  [-1, 0, 0],
+  [0, 0, 0],
+  [1, 0, 0],
+  [1, 1, 0],
+  [1, 2, 0],
+  [0, 2, 0],
+];
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
+}
+
+function AxisLine({
+  start,
+  end,
+  color,
+}: {
+  start: Vec3;
+  end: Vec3;
+  color: string;
+}) {
+  const { position, quaternion, length } = useMemo(() => {
+    const startVector = new Vector3(...start);
+    const endVector = new Vector3(...end);
+
+    const direction = new Vector3().subVectors(endVector, startVector);
+    const lineLength = direction.length();
+
+    const midpoint = new Vector3()
+      .addVectors(startVector, endVector)
+      .multiplyScalar(0.5);
+
+    const lineQuaternion = new Quaternion().setFromUnitVectors(
+      new Vector3(0, 1, 0),
+      direction.clone().normalize()
+    );
+
+    return {
+      position: midpoint,
+      quaternion: lineQuaternion,
+      length: lineLength,
+    };
+  }, [start, end]);
+
+  return (
+    <mesh position={position} quaternion={quaternion} renderOrder={10}>
+      <cylinderGeometry args={[0.018, 0.018, length, 12]} />
+      <meshBasicMaterial color={color} transparent opacity={0.85} />
+    </mesh>
+  );
+}
+
+function AxisArrow({
+  position,
+  direction,
+  color,
+}: {
+  position: Vec3;
+  direction: Vec3;
+  color: string;
+}) {
+  const quaternion = useMemo(() => {
+    return new Quaternion().setFromUnitVectors(
+      new Vector3(0, 1, 0),
+      new Vector3(...direction).normalize()
+    );
+  }, [direction]);
+
+  return (
+    <mesh position={position} quaternion={quaternion} renderOrder={10}>
+      <coneGeometry args={[0.07, 0.2, 16]} />
+      <meshBasicMaterial color={color} />
+    </mesh>
+  );
+}
+
+function SimpleAxisGuide() {
+  return (
+    <group>
+      <AxisLine start={[-2.75, 0, 0]} end={[2.75, 0, 0]} color="#ffffff" />
+      <AxisLine start={[0, -2.75, 0]} end={[0, 2.75, 0]} color="#fffa17" />
+      <AxisLine start={[0, 0, -2.75]} end={[0, 0, 2.75]} color="#00d4ff" />
+
+      <AxisArrow
+        position={[2.95, 0, 0]}
+        direction={[1, 0, 0]}
+        color="#ffffff"
+      />
+
+      <AxisArrow
+        position={[0, 2.95, 0]}
+        direction={[0, 1, 0]}
+        color="#fffa17"
+      />
+
+      <AxisArrow
+        position={[0, 0, 2.95]}
+        direction={[0, 0, 1]}
+        color="#00d4ff"
+      />
+    </group>
+  );
+}
+function DemoCube({
+  position,
+  isAccent,
+}: {
+  position: Vec3;
+  isAccent: boolean;
+}) {
+  const boxGeometry = useMemo(() => {
+    return new BoxGeometry(1, 1, 1);
+  }, []);
+
+  const edgeGeometry = useMemo(() => {
+    return new EdgesGeometry(boxGeometry);
+  }, [boxGeometry]);
+
+  return (
+    <group position={position}>
+      <mesh geometry={boxGeometry}>
+        <meshStandardMaterial
+          color={isAccent ? "#fffa17" : "#002fa5"}
+          roughness={0.5}
+          metalness={0.04}
+        />
+      </mesh>
+
+      <lineSegments geometry={edgeGeometry}>
+        <lineBasicMaterial color="#ffffff" transparent opacity={0.95} />
+      </lineSegments>
+    </group>
+  );
+}
+
+function DemoBlock({ rotation }: { rotation: Quaternion }) {
+  const centeredPositions = useMemo(() => {
+    const xs = demoBlockPositions.map((position) => position[0]);
+    const ys = demoBlockPositions.map((position) => position[1]);
+    const zs = demoBlockPositions.map((position) => position[2]);
+
+    const centerX = (Math.min(...xs) + Math.max(...xs)) / 2;
+    const centerY = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const centerZ = (Math.min(...zs) + Math.max(...zs)) / 2;
+
+    return demoBlockPositions.map((position) => {
+      return [
+        position[0] - centerX,
+        position[1] - centerY,
+        position[2] - centerZ,
+      ] as Vec3;
+    });
+  }, []);
+
+  return (
+    <group quaternion={rotation} scale={0.72}>
+      {centeredPositions.map((position, index) => {
+        const isAccent = index === 2 || index === 3;
+
+        return (
+          <DemoCube
+            key={`${position.join("-")}-${index}`}
+            position={position}
+            isAccent={isAccent}
+          />
+        );
+      })}
+    </group>
+  );
+}
+
+function DemoBlockCanvas({
+  title,
+  rotation,
+  isResult = false,
+}: {
+  title: string;
+  rotation: Quaternion;
+  isResult?: boolean;
+}) {
+  return (
+    <div className="relative pt-3">
+      <div className="absolute left-6 top-3 z-20 -translate-y-1/2 rounded-full border border-[var(--color-nav-border)] bg-[var(--color-bg-primary)] px-4 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--color-text-primary)]">
+        {title}
+      </div>
+
+      <div
+        className={`relative overflow-hidden rounded-[28px] border bg-[var(--color-leaderboard-card)] ${
+          isResult
+            ? "border-2 border-[var(--color-emphasis)] shadow-[0_0_18px_var(--color-emphasis)]"
+            : "border-[var(--color-nav-border)]"
+        }`}
+      >
+        <div className="pointer-events-none absolute left-[31%] top-7 z-10 text-2xl font-black text-[var(--color-emphasis)] drop-shadow-[0_0_8px_var(--color-emphasis)]">
+          y
+        </div>
+
+        <div className="pointer-events-none absolute right-7 top-1/2 z-10 -translate-y-1/2 text-2xl font-black text-white drop-shadow-[0_0_8px_white]">
+          x
+        </div>
+
+        <div className="pointer-events-none absolute bottom-6 left-7 z-10 text-2xl font-black text-[#00d4ff] drop-shadow-[0_0_8px_#00d4ff]">
+          z
+        </div>
+
+        <div className="h-[210px] sm:h-[250px] lg:h-[300px]">
+          <Canvas
+            camera={{
+              position: [4.2, 3.2, 5.2],
+              fov: 42,
+            }}
+            dpr={[1, 2]}
+          >
+            <ambientLight intensity={1.8} />
+            <directionalLight position={[4, 6, 6]} intensity={1.35} />
+            <directionalLight position={[-4, 2, -3]} intensity={0.5} />
+
+            <SimpleAxisGuide />
+            <DemoBlock rotation={rotation} />
+          </Canvas>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RotationControlsDemo() {
+  return (
+    <div className="rounded-[24px] bg-[var(--color-bg-primary)]/85 p-4 text-center shadow-xl">
+      <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-text-primary)]">
+        Rotation Step
+      </p>
+
+      <div className="mt-4 grid grid-cols-4 gap-2">
+        {["-90°", "-45°", "45°", "90°"].map((angle) => {
+          const isActive = angle === "90°";
+
+          return (
+            <div
+              key={angle}
+              className={`rounded-lg px-2 py-2 text-xs font-black ${
+                isActive
+                  ? "bg-[var(--color-emphasis)] text-[var(--color-emphasis-contrast)]"
+                  : "bg-[var(--color-leaderboard-row)] text-[var(--color-text-primary)]"
+              }`}
+            >
+              {angle}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        <div className="rounded-lg bg-[var(--color-leaderboard-row)] px-2 py-2 text-xs font-black text-[var(--color-text-primary)]">
+          Rotate X
+        </div>
+
+        <div className="rounded-lg bg-[var(--color-emphasis)] px-2 py-2 text-xs font-black text-[var(--color-emphasis-contrast)]">
+          Rotate Y
+        </div>
+
+        <div className="rounded-lg bg-[var(--color-leaderboard-row)] px-2 py-2 text-xs font-black text-[var(--color-text-primary)]">
+          Rotate Z
+        </div>
+      </div>
+
+      <p className="mt-4 text-xs font-black leading-5 text-[var(--color-emphasis)]">
+        Rotate 90° around y axis
+      </p>
+    </div>
+  );
+}
+
+function RotationDemoModal({
+  safeStepIndex,
+  totalSteps,
+  onNext,
+  onBack,
+  onSkip,
+}: {
+  safeStepIndex: number;
+  totalSteps: number;
+  onNext: () => void;
+  onBack: () => void;
+  onSkip: () => void;
+}) {
+  return (
+    <div className="pointer-events-auto fixed inset-0 z-[90] overflow-y-auto bg-[var(--color-nav-bg)] px-4 py-5 backdrop-blur-sm">
+      <div className="mx-auto w-full max-w-5xl rounded-[32px] border border-[var(--color-nav-border)] bg-[var(--color-bg-primary)] p-5 text-[var(--color-text-primary)] shadow-2xl sm:p-7">
+        <div className="relative border-b border-[var(--color-nav-border)] pb-5">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--color-emphasis)]">
+            Step {safeStepIndex + 1} of {totalSteps}
+          </p>
+
+          <h2 className="mt-3 text-center text-2xl font-black sm:text-3xl">
+            How to Play?
+          </h2>
+
+          <button
+            type="button"
+            onClick={onSkip}
+            className="absolute right-0 top-0 grid h-11 w-11 place-items-center rounded-full bg-[var(--color-leaderboard-row)] text-3xl leading-none text-[var(--color-text-primary)] transition hover:text-[var(--color-emphasis)]"
+            aria-label="Close tutorial"
+          >
+            ×
+          </button>
+        </div>
+
+        <p className="mt-6 text-center text-sm font-bold leading-6 opacity-85 sm:text-base">
+          Recreate target object by manipulating current object.
+        </p>
+
+        <div className="mt-6 grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_300px_minmax(0,1fr)]">
+          <DemoBlockCanvas title="Current" rotation={currentRotation} />
+
+          <RotationControlsDemo />
+
+          <DemoBlockCanvas
+            title="Target"
+            rotation={resultRotation}
+            isResult
+            />
+        </div>
+
+        <div className="mt-6 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={onSkip}
+            className="rounded-xl border border-[var(--color-nav-border)] px-4 py-2 text-sm font-black text-[var(--color-text-primary)] transition hover:border-[var(--color-emphasis)] hover:text-[var(--color-emphasis)]"
+          >
+            Skip
+          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onBack}
+              className="rounded-xl border border-[var(--color-nav-border)] px-4 py-2 text-sm font-black text-[var(--color-text-primary)] transition hover:border-[var(--color-emphasis)] hover:text-[var(--color-emphasis)]"
+            >
+              Back
+            </button>
+
+            <button
+              type="button"
+              onClick={onNext}
+              className="rounded-xl bg-[var(--color-emphasis)] px-4 py-2 text-sm font-black text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)]"
+            >
+              Finish
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function TutorialOverlay({
@@ -60,9 +432,16 @@ function TutorialOverlay({
 
   const currentStep = steps[safeStepIndex];
   const isLastStep = safeStepIndex === steps.length - 1;
+  const isRotationDemoStep = currentStep?.visual === "rotation-demo";
 
   useEffect(() => {
     if (!currentStep) return;
+
+    if (currentStep.visual === "rotation-demo") {
+      setHighlightRect(null);
+      setIsTargetReady(true);
+      return;
+    }
 
     let isCancelled = false;
     let retryCount = 0;
@@ -75,53 +454,54 @@ function TutorialOverlay({
       if (isCancelled || !currentStep) return;
 
       const targetElements = Array.from(
-  document.querySelectorAll(`[data-tutorial="${currentStep.target}"]`)
-);
+        document.querySelectorAll(`[data-tutorial="${currentStep.target}"]`)
+      );
 
-const targetElement = targetElements.find((element) => {
-  if (!(element instanceof HTMLElement)) return false;
+      const targetElement = targetElements.find((element) => {
+        if (!(element instanceof HTMLElement)) return false;
 
-  const rect = element.getBoundingClientRect();
-  const style = window.getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
 
-  return (
-    rect.width > 0 &&
-    rect.height > 0 &&
-    style.display !== "none" &&
-    style.visibility !== "hidden" &&
-    style.opacity !== "0"
-  );
-});
+        return (
+          rect.width > 0 &&
+          rect.height > 0 &&
+          style.display !== "none" &&
+          style.visibility !== "hidden" &&
+          style.opacity !== "0"
+        );
+      });
 
-if (!(targetElement instanceof HTMLElement)) {
-  retryCount++;
+      if (!(targetElement instanceof HTMLElement)) {
+        retryCount++;
 
-  if (retryCount < 30) {
-    const retryTimeout = window.setTimeout(updateHighlight, 80);
-    retryTimeouts.push(retryTimeout);
-  }
+        if (retryCount < 30) {
+          const retryTimeout = window.setTimeout(updateHighlight, 80);
+          retryTimeouts.push(retryTimeout);
+        }
 
-  return;
-}
+        return;
+      }
+
       if (!hasScrolledToTargetRef.current) {
         hasScrolledToTargetRef.current = true;
 
         const isMobile = window.innerWidth < 1024;
 
         const shouldJumpDirectlyOnMobile =
-        isMobile &&
-        (currentStep.target === "rotation-step-buttons" ||
+          isMobile &&
+          (currentStep.target === "rotation-step-buttons" ||
             currentStep.target === "rotation-axis-buttons" ||
             currentStep.target === "progress-grid" ||
             currentStep.target === "timer-panel" ||
             currentStep.target === "reset-button");
 
         targetElement.scrollIntoView({
-            block: "center",
-            inline: "center",
-            behavior: shouldJumpDirectlyOnMobile ? "auto" : "smooth",
+          block: "center",
+          inline: "center",
+          behavior: shouldJumpDirectlyOnMobile ? "auto" : "smooth",
         });
-        }
+      }
 
       window.requestAnimationFrame(() => {
         if (isCancelled) return;
@@ -208,60 +588,83 @@ if (!(targetElement instanceof HTMLElement)) {
   }, [onSkip]);
 
   const tooltipStyle = useMemo(() => {
-  if (!highlightRect || !currentStep) {
-    return {
-      top: "50%",
-      left: "50%",
-      transform: "translate(-50%, -50%)",
-    };
-  }
-
-  const tooltipWidth = tooltipSize.width;
-  const tooltipHeight = tooltipSize.height;
-  const margin = 18;
-  const screenPadding = 16;
-
-  const maxTop = Math.max(
-    screenPadding,
-    window.innerHeight - tooltipHeight - screenPadding
-  );
-
-  const isMobile = window.innerWidth < 1024;
-
-  const shouldPreferLeftSide =
-    currentStep.target === "rotation-step-buttons" ||
-    currentStep.target === "rotation-axis-buttons";
-
-  if (shouldPreferLeftSide) {
-    const leftSideLeft = highlightRect.left - tooltipWidth - margin;
-    const rightSideLeft = highlightRect.left + highlightRect.width + margin;
-
-    const canShowLeft = leftSideLeft >= screenPadding;
-    const canShowRight =
-      rightSideLeft + tooltipWidth <= window.innerWidth - screenPadding;
-
-    if (canShowLeft || canShowRight) {
+    if (!highlightRect || !currentStep) {
       return {
-        top: clamp(
-          highlightRect.top + highlightRect.height / 2 - tooltipHeight / 2,
-          screenPadding,
-          maxTop
-        ),
-        left: canShowLeft ? leftSideLeft : rightSideLeft,
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+      };
+    }
+
+    const tooltipWidth = tooltipSize.width;
+    const tooltipHeight = tooltipSize.height;
+    const margin = 18;
+    const screenPadding = 16;
+
+    const maxTop = Math.max(
+      screenPadding,
+      window.innerHeight - tooltipHeight - screenPadding
+    );
+
+    const isMobile = window.innerWidth < 1024;
+
+    const shouldPreferLeftSide =
+      currentStep.target === "rotation-step-buttons" ||
+      currentStep.target === "rotation-axis-buttons";
+
+    if (shouldPreferLeftSide) {
+      const leftSideLeft = highlightRect.left - tooltipWidth - margin;
+      const rightSideLeft = highlightRect.left + highlightRect.width + margin;
+
+      const canShowLeft = leftSideLeft >= screenPadding;
+      const canShowRight =
+        rightSideLeft + tooltipWidth <= window.innerWidth - screenPadding;
+
+      if (canShowLeft || canShowRight) {
+        return {
+          top: clamp(
+            highlightRect.top + highlightRect.height / 2 - tooltipHeight / 2,
+            screenPadding,
+            maxTop
+          ),
+          left: canShowLeft ? leftSideLeft : rightSideLeft,
+          transform: "none",
+        };
+      }
+    }
+
+    if (currentStep.target === "timer-panel" && isMobile) {
+      const belowTargetTop = highlightRect.top + highlightRect.height + margin;
+      const lowerScreenTop = window.innerHeight * 0.48;
+
+      const top = clamp(
+        Math.max(belowTargetTop, lowerScreenTop),
+        screenPadding,
+        maxTop
+      );
+
+      const left = clamp(
+        highlightRect.left + highlightRect.width / 2 - tooltipWidth / 2,
+        screenPadding,
+        window.innerWidth - tooltipWidth - screenPadding
+      );
+
+      return {
+        top,
+        left,
         transform: "none",
       };
     }
-  }
 
-  if (currentStep.target === "timer-panel" && isMobile) {
-    const belowTargetTop = highlightRect.top + highlightRect.height + margin;
-    const lowerScreenTop = window.innerHeight * 0.48;
+    const canShowBelow =
+      highlightRect.top + highlightRect.height + tooltipHeight + margin <
+      window.innerHeight - screenPadding;
 
-    const top = clamp(
-      Math.max(belowTargetTop, lowerScreenTop),
-      screenPadding,
-      maxTop
-    );
+    const preferredTop = canShowBelow
+      ? highlightRect.top + highlightRect.height + margin
+      : highlightRect.top - tooltipHeight - margin;
+
+    const top = clamp(preferredTop, screenPadding, maxTop);
 
     const left = clamp(
       highlightRect.left + highlightRect.width / 2 - tooltipWidth / 2,
@@ -274,33 +677,22 @@ if (!(targetElement instanceof HTMLElement)) {
       left,
       transform: "none",
     };
-  }
-
-  const canShowBelow =
-    highlightRect.top + highlightRect.height + tooltipHeight + margin <
-    window.innerHeight - screenPadding;
-
-  const preferredTop = canShowBelow
-    ? highlightRect.top + highlightRect.height + margin
-    : highlightRect.top - tooltipHeight - margin;
-
-  const top = clamp(preferredTop, screenPadding, maxTop);
-
-  const left = clamp(
-    highlightRect.left + highlightRect.width / 2 - tooltipWidth / 2,
-    screenPadding,
-    window.innerWidth - tooltipWidth - screenPadding
-  );
-
-  return {
-    top,
-    left,
-    transform: "none",
-  };
-}, [highlightRect, currentStep, tooltipSize]);
+  }, [highlightRect, currentStep, tooltipSize]);
 
   if (!currentStep) {
     return null;
+  }
+
+  if (isRotationDemoStep) {
+    return (
+      <RotationDemoModal
+        safeStepIndex={safeStepIndex}
+        totalSteps={steps.length}
+        onNext={onNext}
+        onBack={onBack}
+        onSkip={onSkip}
+      />
+    );
   }
 
   return (
