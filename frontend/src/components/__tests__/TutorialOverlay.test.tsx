@@ -74,7 +74,7 @@ describe("TutorialOverlay", () => {
     expect(onNext).toHaveBeenCalledTimes(1);
   });
 
-  it("disables Back on the first step and calls Skip", async () => {
+  it("disables Back on the first step and calls Exit", async () => {
     const user = userEvent.setup();
     const onSkip = vi.fn();
 
@@ -105,7 +105,7 @@ describe("TutorialOverlay", () => {
 
     expect(screen.getByRole("button", { name: /^back$/i })).toBeDisabled();
 
-    await user.click(screen.getByRole("button", { name: /^skip$/i }));
+    await user.click(screen.getByRole("button", { name: /^exit$/i }));
 
     expect(onSkip).toHaveBeenCalledTimes(1);
   });
@@ -148,7 +148,7 @@ describe("TutorialOverlay", () => {
       .toBeInTheDocument();
   });
 
-  it("calls Finish, Back, and Skip from the rotation demo modal", async () => {
+  it("calls Finish, Back, and Exit from the rotation demo modal", async () => {
     const user = userEvent.setup();
 
     const onNext = vi.fn();
@@ -182,7 +182,7 @@ describe("TutorialOverlay", () => {
     await user.click(screen.getByRole("button", { name: /^finish$/i }));
     expect(onNext).toHaveBeenCalledTimes(1);
 
-    await user.click(screen.getByRole("button", { name: /^skip$/i }));
+    await user.click(screen.getByRole("button", { name: /^exit$/i }));
     expect(onSkip).toHaveBeenCalledTimes(1);
   });
 });

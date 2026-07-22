@@ -412,7 +412,7 @@ function RotationDemoModal({
             onClick={onSkip}
             className="rounded-xl border border-[var(--color-nav-border)] px-4 py-2 text-sm font-black text-[var(--color-text-primary)] transition hover:border-[var(--color-emphasis)] hover:text-[var(--color-emphasis)]"
           >
-            Skip
+            Exit
           </button>
 
           <div className="flex items-center gap-2">
@@ -542,13 +542,14 @@ function TutorialOverlay({
         if (isCancelled) return;
 
         const rect = targetElement.getBoundingClientRect();
-        const padding = 8;
+        const paddingX = 16;
+        const paddingY = 8;
 
         setHighlightRect({
-          top: rect.top - padding,
-          left: rect.left - padding,
-          width: rect.width + padding * 2,
-          height: rect.height + padding * 2,
+          top: rect.top - paddingY,
+          left: rect.left - paddingX,
+          width: rect.width + paddingX * 2,
+          height: rect.height + paddingY * 2,
         });
 
         setIsTargetReady(true);
@@ -734,7 +735,7 @@ function TutorialOverlay({
     <div className="pointer-events-none fixed inset-0 z-[90]">
       {highlightRect && (
         <div
-          className={`pointer-events-none fixed rounded-2xl border-2 border-[var(--color-emphasis)] bg-[var(--color-emphasis)]/10 shadow-[0_0_24px_var(--color-emphasis)] transition-all duration-500 ease-out ${
+          className={`pointer-events-none fixed rounded-2xl border-2 border-[var(--color-emphasis)] bg-[var(--color-emphasis)]/10 shadow-[0_0_12px_var(--color-emphasis)] transition-all duration-500 ease-out ${
             isTargetReady ? "opacity-100" : "opacity-0"
           }`}
           style={{
@@ -769,7 +770,7 @@ function TutorialOverlay({
             onClick={onSkip}
             className="rounded-xl border border-[var(--color-nav-border)] px-4 py-2 text-sm font-black text-[var(--color-text-primary)] transition hover:border-[var(--color-emphasis)] hover:text-[var(--color-emphasis)]"
           >
-            Skip
+            Exit
           </button>
 
           <div className="flex items-center gap-2">
