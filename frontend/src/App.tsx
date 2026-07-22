@@ -36,7 +36,7 @@ const tutorialSteps: TutorialStep[] = [
     target: "tutorial-button",
     title: "Tutorial",
     description:
-      "You can replay this guide anytime from the Tutorial button in the navbar. Click Skip to exit the tutorial mode.",
+      "You can replay this guide anytime from the Tutorial button in the navbar. Click Exit to exit the tutorial mode.",
   },
   {
     route: "/",
