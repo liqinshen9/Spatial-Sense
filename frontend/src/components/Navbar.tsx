@@ -107,10 +107,11 @@ function Navbar({
 
         <button
           type="button"
+          data-tutorial="tutorial-button"
           onClick={onStartTutorial}
           className="whitespace-nowrap px-2 py-2 text-xs font-bold transition hover:text-[var(--color-emphasis)] sm:px-5 sm:text-sm"
         >
-          <span data-tutorial="tutorial-button">Tutorial</span>
+          Tutorial
         </button>
       </div>
 
