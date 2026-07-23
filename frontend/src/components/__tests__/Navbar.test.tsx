@@ -55,11 +55,16 @@ describe("Navbar", () => {
     expect(props.onLogout).toHaveBeenCalledTimes(1);
   });
 
-  it("uses a tutorial target on the Tutorial button", () => {
+  it("uses a tight tutorial target on the Tutorial text", () => {
     renderWithRouter(<Navbar {...createNavbarProps()} />);
 
-    expect(screen.getByRole("button", { name: /^tutorial$/i }))
-      .toHaveAttribute("data-tutorial", "tutorial-button");
+    const tutorialButton = screen.getByRole("button", { name: /^tutorial$/i });
+    const tutorialTarget = screen.getByText(/^tutorial$/i, {
+      selector: "[data-tutorial]",
+    });
+
+    expect(tutorialButton).not.toHaveAttribute("data-tutorial");
+    expect(tutorialTarget).toHaveAttribute("data-tutorial", "tutorial-button");
   });
 });
 

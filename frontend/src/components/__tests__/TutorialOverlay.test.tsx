@@ -110,6 +110,38 @@ describe("TutorialOverlay", () => {
     expect(onSkip).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps the tutorial highlight tightly around the target", async () => {
+    createTutorialTarget("start-game");
+
+    const steps: TutorialStep[] = [
+      {
+        route: "/",
+        target: "start-game",
+        title: "Start Game",
+        description: "Click this button to start the game.",
+      },
+    ];
+
+    render(
+      <TutorialOverlay
+        steps={steps}
+        currentStepIndex={0}
+        onNext={vi.fn()}
+        onBack={vi.fn()}
+        onSkip={vi.fn()}
+      />
+    );
+
+    const highlight = await screen.findByTestId("tutorial-highlight");
+
+    expect(highlight).toHaveStyle({
+      top: "92px",
+      left: "92px",
+      width: "176px",
+      height: "76px",
+    });
+  });
+
   it("shows the rotation demo tutorial modal", () => {
     const steps: TutorialStep[] = [
       {

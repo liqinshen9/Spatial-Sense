@@ -37,6 +37,8 @@ type TooltipSize = {
 
 type Vec3 = [number, number, number];
 
+const HIGHLIGHT_PADDING = 8;
+
 function getCssVariableValue(variableName: string) {
   if (typeof window === "undefined") return "";
   return getComputedStyle(document.documentElement)
@@ -542,14 +544,11 @@ function TutorialOverlay({
         if (isCancelled) return;
 
         const rect = targetElement.getBoundingClientRect();
-        const paddingX = 16;
-        const paddingY = 8;
-
         setHighlightRect({
-          top: rect.top - paddingY,
-          left: rect.left - paddingX,
-          width: rect.width + paddingX * 2,
-          height: rect.height + paddingY * 2,
+          top: rect.top - HIGHLIGHT_PADDING,
+          left: rect.left - HIGHLIGHT_PADDING,
+          width: rect.width + HIGHLIGHT_PADDING * 2,
+          height: rect.height + HIGHLIGHT_PADDING * 2,
         });
 
         setIsTargetReady(true);
@@ -735,6 +734,7 @@ function TutorialOverlay({
     <div className="pointer-events-none fixed inset-0 z-[90]">
       {highlightRect && (
         <div
+          data-testid="tutorial-highlight"
           className={`pointer-events-none fixed rounded-2xl border-2 border-[var(--color-emphasis)] bg-[var(--color-emphasis)]/10 shadow-[0_0_12px_var(--color-emphasis)] transition-all duration-500 ease-out ${
             isTargetReady ? "opacity-100" : "opacity-0"
           }`}
