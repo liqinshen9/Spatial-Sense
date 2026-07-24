@@ -151,15 +151,6 @@ function PuzzleBlockCanvas({
   orientation,
   size = "main",
 }: PuzzleBlockCanvasProps) {
-  const cubeColors = useMemo(
-    () => ({
-      blue: getCssVariableValue("--color-3d-cube-main"),
-      yellow: getCssVariableValue("--color-3d-cube-accent"),
-      edge: getCssVariableValue("--color-3d-edge"),
-    }),
-    []
-  );
-
   return (
     <Canvas
       camera={{
