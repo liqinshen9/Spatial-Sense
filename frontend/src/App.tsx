@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   Navigate,
   Route,
@@ -19,16 +19,29 @@ import type { CompletedScore } from "./components/GamePage";
 import type { AuthUser } from "./types/auth";
 import { createScore } from "./api/scores";
 import { useMinimalSoundEffects } from "./hooks/useMinimalSoundEffects";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
+import {
+  closeTutorial as closeTutorialState,
+  setAuthModalOpen,
+  setCurrentUser,
+  setDifficultyIndex,
+  setLeaveGameModalOpen,
+  setPendingScore,
+  setProfileModalOpen,
+  setShouldWarnBeforeLeavingGame,
+  setSoundEnabled,
+  setTutorialStepIndex,
+  SOUND_STORAGE_KEY,
+  startTutorial,
+  toggleTheme,
+  TUTORIAL_STORAGE_KEY,
+  USER_STORAGE_KEY,
+} from "./store/appSlice";
 import {
   playSoundToggleOffSound,
   playSoundToggleOnSound,
   setSoundEffectsEnabled,
 } from "./utils/soundEffects";
-
-const USER_STORAGE_KEY = "spatialSenseUser";
-const SOUND_STORAGE_KEY = "spatialSenseSoundEnabled";
-const TUTORIAL_STORAGE_KEY = "spatialSenseTutorialSeen";
-const TUTORIAL_DIFFICULTY_INDEX = 2;
 
 const tutorialSteps: TutorialStep[] = [
   {
@@ -112,29 +125,22 @@ const tutorialSteps: TutorialStep[] = [
 ];
 
 function App() {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const [isDarkMode, setIsDarkMode] = useState(true);
-
-  const [isSoundEnabled, setIsSoundEnabled] = useState(() => {
-    return localStorage.getItem(SOUND_STORAGE_KEY) !== "false";
-  });
-
-  const [difficultyIndex, setDifficultyIndex] = useState(0);
-
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [pendingScore, setPendingScore] = useState<CompletedScore | null>(null);
-
-  const [shouldWarnBeforeLeavingGame, setShouldWarnBeforeLeavingGame] =
-    useState(false);
-
-  const [isLeaveGameModalOpen, setIsLeaveGameModalOpen] = useState(false);
-
-  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
-  const [tutorialStepIndex, setTutorialStepIndex] = useState(0);
+  const {
+    isDarkMode,
+    isSoundEnabled,
+    difficultyIndex,
+    currentUser,
+    isAuthModalOpen,
+    isProfileModalOpen,
+    pendingScore,
+    shouldWarnBeforeLeavingGame,
+    isLeaveGameModalOpen,
+    isTutorialOpen,
+    tutorialStepIndex,
+  } = useAppSelector((state) => state.app);
 
   const pendingLeaveActionRef = useRef<(() => void) | null>(null);
   const isSavingScoreRef = useRef(false);
@@ -142,25 +148,10 @@ function App() {
   useMinimalSoundEffects(isSoundEnabled);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem(USER_STORAGE_KEY);
-
-    if (!savedUser) return;
-
-    try {
-      setCurrentUser(JSON.parse(savedUser));
-    } catch {
-      localStorage.removeItem(USER_STORAGE_KEY);
-    }
-  }, []);
-
-  useEffect(() => {
     const hasSeenTutorial =
       localStorage.getItem(TUTORIAL_STORAGE_KEY) === "true";
 
     if (!hasSeenTutorial) {
-      setDifficultyIndex(TUTORIAL_DIFFICULTY_INDEX);
-      setTutorialStepIndex(0);
-      setIsTutorialOpen(true);
       navigate("/", { replace: true });
     }
   }, [navigate]);
@@ -173,10 +164,16 @@ function App() {
     if (!currentStep) return;
 
     if (location.pathname !== currentStep.route) {
-      setShouldWarnBeforeLeavingGame(false);
+      dispatch(setShouldWarnBeforeLeavingGame(false));
       navigate(currentStep.route);
     }
-  }, [isTutorialOpen, tutorialStepIndex, location.pathname, navigate]);
+  }, [
+    dispatch,
+    isTutorialOpen,
+    tutorialStepIndex,
+    location.pathname,
+    navigate,
+  ]);
 
   useEffect(() => {
     if (
@@ -212,7 +209,7 @@ function App() {
       playSoundToggleOnSound();
     }
 
-    setIsSoundEnabled(nextValue);
+    dispatch(setSoundEnabled(nextValue));
     localStorage.setItem(SOUND_STORAGE_KEY, String(nextValue));
   }
 
@@ -227,34 +224,34 @@ function App() {
     }
 
     pendingLeaveActionRef.current = actionAfterLeaving;
-    setIsLeaveGameModalOpen(true);
+    dispatch(setLeaveGameModalOpen(true));
   }
 
   function handleStayOnGame() {
     pendingLeaveActionRef.current = null;
-    setIsLeaveGameModalOpen(false);
+    dispatch(setLeaveGameModalOpen(false));
   }
 
   function handleConfirmLeaveGame() {
     const actionAfterLeaving = pendingLeaveActionRef.current;
 
     pendingLeaveActionRef.current = null;
-    setIsLeaveGameModalOpen(false);
-    setShouldWarnBeforeLeavingGame(false);
+    dispatch(setLeaveGameModalOpen(false));
+    dispatch(setShouldWarnBeforeLeavingGame(false));
 
     actionAfterLeaving?.();
   }
 
   function handleGuardedNavigate(path: string) {
     requestLeaveGame(() => {
-      setShouldWarnBeforeLeavingGame(false);
+      dispatch(setShouldWarnBeforeLeavingGame(false));
       navigate(path);
     });
   }
 
   function handleGuardedLoginClick() {
     requestLeaveGame(() => {
-      setShouldWarnBeforeLeavingGame(false);
+      dispatch(setShouldWarnBeforeLeavingGame(false));
 
       if (location.pathname === "/game") {
         navigate("/");
@@ -265,13 +262,13 @@ function App() {
   }
 
   function saveUser(user: AuthUser) {
-    setCurrentUser(user);
+    dispatch(setCurrentUser(user));
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
   }
 
   function handleLogout() {
-    setCurrentUser(null);
-    setIsProfileModalOpen(false);
+    dispatch(setCurrentUser(null));
+    dispatch(setProfileModalOpen(false));
     localStorage.removeItem(USER_STORAGE_KEY);
 
     if (location.pathname === "/leaderboard") {
@@ -289,11 +286,11 @@ function App() {
   function handleOpenProfileModal() {
     if (!currentUser) return;
 
-    setIsProfileModalOpen(true);
+    dispatch(setProfileModalOpen(true));
   }
 
   function handleCloseProfileModal() {
-    setIsProfileModalOpen(false);
+    dispatch(setProfileModalOpen(false));
   }
 
   function handleUserUpdated(user: AuthUser) {
@@ -301,48 +298,40 @@ function App() {
   }
 
   function handleAccountDeleted() {
-    setCurrentUser(null);
-    setIsProfileModalOpen(false);
-    setIsAuthModalOpen(false);
-    setPendingScore(null);
+    dispatch(setCurrentUser(null));
+    dispatch(setProfileModalOpen(false));
+    dispatch(setAuthModalOpen(false));
+    dispatch(setPendingScore(null));
     localStorage.removeItem(USER_STORAGE_KEY);
     navigate("/");
   }
 
   function handleBackHomeWithoutSaving() {
-    setIsAuthModalOpen(false);
-    setPendingScore(null);
-    setShouldWarnBeforeLeavingGame(false);
+    dispatch(setAuthModalOpen(false));
+    dispatch(setPendingScore(null));
+    dispatch(setShouldWarnBeforeLeavingGame(false));
     navigate("/");
   }
 
   function handleOpenAuthModal(score?: CompletedScore | null) {
-    setPendingScore(score ?? null);
-    setIsAuthModalOpen(true);
+    dispatch(setPendingScore(score ?? null));
+    dispatch(setAuthModalOpen(true));
   }
 
   function handleCloseAuthModal() {
-    setIsAuthModalOpen(false);
+    dispatch(setAuthModalOpen(false));
   }
 
   function handleStartTutorial() {
     requestLeaveGame(() => {
-      setIsAuthModalOpen(false);
-      setIsProfileModalOpen(false);
-      setPendingScore(null);
-      setShouldWarnBeforeLeavingGame(false);
-      setDifficultyIndex(TUTORIAL_DIFFICULTY_INDEX);
-      setTutorialStepIndex(0);
-      setIsTutorialOpen(true);
+      dispatch(startTutorial());
       navigate("/");
     });
   }
 
   function closeTutorial() {
     localStorage.setItem(TUTORIAL_STORAGE_KEY, "true");
-    setIsTutorialOpen(false);
-    setTutorialStepIndex(0);
-    setShouldWarnBeforeLeavingGame(false);
+    dispatch(closeTutorialState());
 
     if (location.pathname === "/game") {
       navigate("/");
@@ -350,33 +339,33 @@ function App() {
   }
 
   function goToTutorialStep(nextIndex: number) {
-  const safeNextIndex = Math.min(
-    Math.max(nextIndex, 0),
-    tutorialSteps.length - 1
-  );
+    const safeNextIndex = Math.min(
+      Math.max(nextIndex, 0),
+      tutorialSteps.length - 1
+    );
 
-  const nextStep = tutorialSteps[safeNextIndex];
+    const nextStep = tutorialSteps[safeNextIndex];
 
-  setTutorialStepIndex(safeNextIndex);
-  setShouldWarnBeforeLeavingGame(false);
+    dispatch(setTutorialStepIndex(safeNextIndex));
+    dispatch(setShouldWarnBeforeLeavingGame(false));
 
-  if (location.pathname !== nextStep.route) {
-    navigate(nextStep.route);
-  }
-}
-
-function handleTutorialNext() {
-  if (tutorialStepIndex >= tutorialSteps.length - 1) {
-    closeTutorial();
-    return;
+    if (location.pathname !== nextStep.route) {
+      navigate(nextStep.route);
+    }
   }
 
-  goToTutorialStep(tutorialStepIndex + 1);
-}
+  function handleTutorialNext() {
+    if (tutorialStepIndex >= tutorialSteps.length - 1) {
+      closeTutorial();
+      return;
+    }
 
-function handleTutorialBack() {
-  goToTutorialStep(tutorialStepIndex - 1);
-}
+    goToTutorialStep(tutorialStepIndex + 1);
+  }
+
+  function handleTutorialBack() {
+    goToTutorialStep(tutorialStepIndex - 1);
+  }
 
   async function saveScoreAndOpenLeaderboard(
     score: CompletedScore,
@@ -404,8 +393,8 @@ function handleTutorialBack() {
 
       const difficultyQuery = score.difficultyName.toLowerCase();
 
-      setPendingScore(null);
-      setShouldWarnBeforeLeavingGame(false);
+      dispatch(setPendingScore(null));
+      dispatch(setShouldWarnBeforeLeavingGame(false));
 
       navigate(
         `/leaderboard?difficulty=${difficultyQuery}&highlightScoreId=${savedScore.id}`
@@ -417,7 +406,7 @@ function handleTutorialBack() {
 
   async function handleAuthenticated(user: AuthUser) {
     saveUser(user);
-    setIsAuthModalOpen(false);
+    dispatch(setAuthModalOpen(false));
 
     if (pendingScore) {
       await saveScoreAndOpenLeaderboard(pendingScore, user);
@@ -434,7 +423,7 @@ function handleTutorialBack() {
         isDarkMode={isDarkMode}
         isSoundEnabled={isSoundEnabled}
         currentUser={currentUser}
-        onToggleTheme={() => setIsDarkMode((prev) => !prev)}
+        onToggleTheme={() => dispatch(toggleTheme())}
         onToggleSound={handleToggleSound}
         onNavigateRequest={handleGuardedNavigate}
         onLoginClick={handleGuardedLoginClick}
@@ -449,7 +438,9 @@ function handleTutorialBack() {
           element={
             <HeroSection
               difficultyIndex={difficultyIndex}
-              onDifficultyChange={setDifficultyIndex}
+              onDifficultyChange={(nextDifficulty) =>
+                dispatch(setDifficultyIndex(nextDifficulty))
+              }
               isTutorialActive={isTutorialOpen}
             />
           }
@@ -464,7 +455,9 @@ function handleTutorialBack() {
               onBackHome={handleBackHomeWithoutSaving}
               onOpenAuthModal={handleOpenAuthModal}
               onViewLeaderboard={saveScoreAndOpenLeaderboard}
-              onGameProgressChange={setShouldWarnBeforeLeavingGame}
+              onGameProgressChange={(shouldWarn) =>
+                dispatch(setShouldWarnBeforeLeavingGame(shouldWarn))
+              }
               isTutorialActive={isTutorialOpen}
             />
           }
