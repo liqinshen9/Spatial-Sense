@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   Navigate,
   Route,
@@ -144,6 +144,12 @@ function App() {
 
   const pendingLeaveActionRef = useRef<(() => void) | null>(null);
   const isSavingScoreRef = useRef(false);
+  const handleGameProgressChange = useCallback(
+    (shouldWarn: boolean) => {
+      dispatch(setShouldWarnBeforeLeavingGame(shouldWarn));
+    },
+    [dispatch]
+  );
 
   useMinimalSoundEffects(isSoundEnabled);
 
@@ -455,9 +461,7 @@ function App() {
               onBackHome={handleBackHomeWithoutSaving}
               onOpenAuthModal={handleOpenAuthModal}
               onViewLeaderboard={saveScoreAndOpenLeaderboard}
-              onGameProgressChange={(shouldWarn) =>
-                dispatch(setShouldWarnBeforeLeavingGame(shouldWarn))
-              }
+              onGameProgressChange={handleGameProgressChange}
               isTutorialActive={isTutorialOpen}
             />
           }
