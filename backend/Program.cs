@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Services;
 using Microsoft.Extensions.FileProviders;
 using Scalar.AspNetCore;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +37,32 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new { message = "Too many requests. Please try again shortly." },
+            cancellationToken
+        );
+    };
+
+    options.AddPolicy("Api", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 120,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }
+        )
+    );
+});
 builder.Services.AddSingleton<PuzzleService>();
 builder.Services.AddSingleton<PasswordService>();
 builder.Services.AddSingleton<AvatarStorageService>();
@@ -47,6 +75,7 @@ var avatarFolderPath = Path.Combine(webRootPath, "uploads", "avatars");
 Directory.CreateDirectory(avatarFolderPath);
 
 app.UseCors("Frontend");
+app.UseRateLimiter();
 
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -70,16 +99,16 @@ app.MapGet("/api/users", async (AppDbContext db) =>
         .ToListAsync();
 
     return Results.Ok(users);
-});
+}).RequireRateLimiting("Api");
 
-app.MapControllers();
+app.MapControllers().RequireRateLimiting("Api");
 app.MapOpenApi();
 app.MapScalarApiReference();
 
 app.MapGet("/api/puzzles", (PuzzleService puzzleService) =>
 {
     return Results.Ok(puzzleService.GetAll());
-});
+}).RequireRateLimiting("Api");
 
 app.MapGet("/api/puzzles/random", (string? difficulty, PuzzleService puzzleService) =>
 {
@@ -90,7 +119,7 @@ app.MapGet("/api/puzzles/random", (string? difficulty, PuzzleService puzzleServi
     var puzzle = puzzleService.GetRandom(selectedDifficulty);
 
     return Results.Ok(puzzle);
-});
+}).RequireRateLimiting("Api");
 
 app.MapGet("/api/puzzles/{id:int}", (int id, PuzzleService puzzleService) =>
 {
@@ -102,7 +131,7 @@ app.MapGet("/api/puzzles/{id:int}", (int id, PuzzleService puzzleService) =>
     }
 
     return Results.Ok(puzzle);
-});
+}).RequireRateLimiting("Api");
 
 
 app.Run();
