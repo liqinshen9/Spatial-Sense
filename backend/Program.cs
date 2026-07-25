@@ -62,6 +62,32 @@ builder.Services.AddRateLimiter(options =>
             }
         )
     );
+
+    options.AddPolicy("Auth", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }
+        )
+    );
+
+    options.AddPolicy("Write", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 30,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }
+        )
+    );
 });
 builder.Services.AddSingleton<PuzzleService>();
 builder.Services.AddSingleton<PasswordService>();
@@ -101,7 +127,7 @@ app.MapGet("/api/users", async (AppDbContext db) =>
     return Results.Ok(users);
 }).RequireRateLimiting("Api");
 
-app.MapControllers().RequireRateLimiting("Api");
+app.MapControllers();
 app.MapOpenApi();
 app.MapScalarApiReference();
 

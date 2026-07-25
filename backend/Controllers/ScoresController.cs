@@ -1,6 +1,7 @@
 using Backend.Data;
 using Backend.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers;
@@ -17,6 +18,7 @@ public class ScoresController : ControllerBase
     }
 
     [HttpGet]
+    [EnableRateLimiting("Api")]
     public async Task<ActionResult<List<ScoreResponse>>> GetScores([FromQuery] string? difficulty)
     {
         var selectedDifficulty = NormalizeDifficulty(difficulty);
@@ -26,6 +28,7 @@ public class ScoresController : ControllerBase
     }
 
     [HttpPost]
+    [EnableRateLimiting("Write")]
     public async Task<ActionResult<ScoreResponse>> CreateScore(CreateScoreRequest request)
     {
         if (request.UserId <= 0)
@@ -98,6 +101,7 @@ public class ScoresController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [EnableRateLimiting("Api")]
     public async Task<ActionResult<ScoreResponse>> GetScore(int id)
     {
         var score = await _context.Scores.FindAsync(id);

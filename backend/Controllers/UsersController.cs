@@ -2,6 +2,7 @@ using Backend.Data;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers;
@@ -20,6 +21,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [EnableRateLimiting("Api")]
     public async Task<ActionResult<UserProfileResponse>> GetUser(int id)
     {
         var user = await _context.Users
@@ -36,6 +38,7 @@ public class UsersController : ControllerBase
 
     [HttpPut("{id:int}/avatar")]
     [Consumes("multipart/form-data")]
+    [EnableRateLimiting("Write")]
     public async Task<ActionResult<UserProfileResponse>> UpdateAvatar(
         int id,
         [FromForm] UpdateAvatarRequest request
@@ -75,6 +78,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [EnableRateLimiting("Write")]
     public async Task<IActionResult> DeleteAccount(int id)
     {
         var user = await _context.Users

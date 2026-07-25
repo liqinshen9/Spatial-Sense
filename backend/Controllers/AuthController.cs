@@ -2,6 +2,7 @@ using Backend.Data;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers;
@@ -30,6 +31,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("Api")]
     public async Task<ActionResult<AuthUserResponse>> Login(LoginRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.UsernameOrEmail) ||
@@ -71,6 +73,7 @@ public class AuthController : ControllerBase
 
     [HttpPost("register")]
     [Consumes("multipart/form-data")]
+    [EnableRateLimiting("Auth")]
     public async Task<ActionResult<AuthUserResponse>> Register([FromForm] RegisterRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name) ||
