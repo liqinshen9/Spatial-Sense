@@ -94,7 +94,7 @@ public class AuthControllerTests : IDisposable
         {
             Name = "  Jamie  ",
             Email = "JAMIE@EXAMPLE.COM",
-            Password = "password"
+            Password = "Password1!"
         });
 
         var createdResult = Assert.IsType<CreatedResult>(result.Result);
@@ -106,6 +106,24 @@ public class AuthControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task Register_RejectsWeakPassword()
+    {
+        await using var context = TestDbContextFactory.Create();
+        var controller = CreateController(context);
+
+        var result = await controller.Register(new RegisterRequest
+        {
+            Name = "Jamie",
+            Email = "jamie@example.com",
+            Password = "password"
+        });
+
+        var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.Contains("uppercase", badRequest.Value?.ToString());
+        Assert.Empty(await context.Users.ToListAsync());
+    }
+
+    [Fact]
     public async Task Register_RejectsDuplicateUsernameAndEmail()
     {
         await using var context = TestDbContextFactory.Create();
@@ -114,7 +132,7 @@ public class AuthControllerTests : IDisposable
         {
             Name = "Jamie",
             Email = "jamie@example.com",
-            PasswordHash = passwordService.HashPassword("password")
+            PasswordHash = passwordService.HashPassword("Password1!")
         });
         await context.SaveChangesAsync();
         var controller = CreateController(context, passwordService);
@@ -123,17 +141,18 @@ public class AuthControllerTests : IDisposable
         {
             Name = "jamie",
             Email = "new@example.com",
-            Password = "password"
+            Password = "Password1!"
         });
         var duplicateEmail = await controller.Register(new RegisterRequest
         {
             Name = "NewName",
             Email = "JAMIE@EXAMPLE.COM",
-            Password = "password"
+            Password = "Password1!"
         });
 
-        Assert.IsType<ConflictObjectResult>(duplicateName.Result);
+        var duplicateNameResult = Assert.IsType<ConflictObjectResult>(duplicateName.Result);
         Assert.IsType<ConflictObjectResult>(duplicateEmail.Result);
+        Assert.Contains("Username is already in use.", duplicateNameResult.Value?.ToString());
     }
 
     public void Dispose()

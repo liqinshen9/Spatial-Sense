@@ -130,7 +130,6 @@ function LeaderboardPage({
     const nextParams = new URLSearchParams(searchParams);
 
     nextParams.set("difficulty", difficulty);
-    nextParams.delete("highlightScoreId");
 
     setCurrentPage(1);
     setSearchParams(nextParams);

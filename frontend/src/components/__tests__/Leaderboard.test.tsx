@@ -1,5 +1,6 @@
-import { screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Leaderboard from "../Leaderboard";
 import { renderWithRouter } from "../../test/renderWithRouter";
@@ -95,6 +96,44 @@ describe("Leaderboard", () => {
     });
   });
 
+  it("keeps the highlighted score id when switching difficulty tabs", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter
+        initialEntries={["/leaderboard?difficulty=easy&highlightScoreId=1"]}
+      >
+        <Leaderboard
+          currentUser={mockCurrentUser}
+          onOpenProfileModal={vi.fn()}
+        />
+        <LocationSearch />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Li")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: /medium/i }));
+
+    expect(screen.getByTestId("location-search")).toHaveTextContent(
+      "difficulty=medium"
+    );
+    expect(screen.getByTestId("location-search")).toHaveTextContent(
+      "highlightScoreId=1"
+    );
+
+    await user.click(screen.getByRole("button", { name: /easy/i }));
+
+    expect(screen.getByTestId("location-search")).toHaveTextContent(
+      "difficulty=easy"
+    );
+    expect(screen.getByTestId("location-search")).toHaveTextContent(
+      "highlightScoreId=1"
+    );
+  });
+
   it("opens profile only for the current user's row", async () => {
     const user = userEvent.setup();
     const onOpenProfileModal = vi.fn();
@@ -116,3 +155,9 @@ describe("Leaderboard", () => {
     expect(onOpenProfileModal).toHaveBeenCalled();
   });
 });
+
+function LocationSearch() {
+  const location = useLocation();
+
+  return <div data-testid="location-search">{location.search}</div>;
+}

@@ -3,6 +3,7 @@ import type { CompletedScore } from "./GamePage";
 import type { AuthUser } from "../types/auth";
 import { loginUser, registerUser, type ApiError } from "../api/auth";
 import { playButtonSound, playErrorSound } from "../utils/soundEffects";
+import BlockLoading from "./BlockLoading";
 
 type AuthModalProps = {
   pendingScore: CompletedScore | null;
@@ -11,6 +12,20 @@ type AuthModalProps = {
 };
 
 type AuthMode = "login" | "register";
+
+const passwordRequirementsMessage =
+  "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.";
+const usernameInUseMessage = "Username is already in use.";
+
+function passwordMeetsRequirements(password: string) {
+  return (
+    password.length >= 8 &&
+    /[A-Z]/.test(password) &&
+    /[a-z]/.test(password) &&
+    /\d/.test(password) &&
+    /[^A-Za-z0-9]/.test(password)
+  );
+}
 
 function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
   const [mode, setMode] = useState<AuthMode>("login");
@@ -54,6 +69,12 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
 
   const registerPasswordMissing =
     hasSubmitted && mode === "register" && registerPassword.trim().length === 0;
+
+  const registerPasswordInvalid =
+    hasSubmitted &&
+    mode === "register" &&
+    registerPassword.length > 0 &&
+    !passwordMeetsRequirements(registerPassword);
 
   const confirmPasswordMissing =
     hasSubmitted && mode === "register" && confirmPassword.trim().length === 0;
@@ -154,6 +175,11 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
       return;
     }
 
+    if (!passwordMeetsRequirements(registerPassword)) {
+      triggerError(passwordRequirementsMessage);
+      return;
+    }
+
     if (registerPassword !== confirmPassword) {
       triggerError("Passwords do not match.");
       return;
@@ -186,7 +212,17 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
       setMessage("Account created. Please log in to save your score.");
     } catch (error) {
       const apiError = error as ApiError;
-      triggerError(apiError.message || "Sign up failed.");
+      const apiMessage = apiError.message ?? "";
+
+      if (
+        apiError.status === 409 &&
+        apiMessage.toLowerCase().includes("username")
+      ) {
+        triggerError(usernameInUseMessage);
+        return;
+      }
+
+      triggerError(apiMessage || "Sign up failed.");
     } finally {
       setIsSubmitting(false);
     }
@@ -326,19 +362,30 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
                 />
               </label>
 
-              <label className="block">
-                <span className="text-sm font-black text-[var(--color-text-primary)]">
-                  Password
-                </span>
+              <div className="block">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                  <label
+                    htmlFor="register-password"
+                    className="text-sm font-black text-[var(--color-text-primary)]"
+                  >
+                    Password
+                  </label>
+                  <span className="text-xs font-bold text-[var(--color-text-primary)] opacity-65">
+                    8+ chars with at least one uppercase letter, lowercase letter, number, special char
+                  </span>
+                </div>
 
                 <input
+                  id="register-password"
                   value={registerPassword}
                   onChange={(event) => setRegisterPassword(event.target.value)}
                   type="password"
                   placeholder="Create a password"
-                  className={getInputClass(registerPasswordMissing)}
+                  className={getInputClass(
+                    registerPasswordMissing || registerPasswordInvalid
+                  )}
                 />
-              </label>
+              </div>
 
               <label className="block">
                 <span className="text-sm font-black text-[var(--color-text-primary)]">
@@ -373,8 +420,16 @@ function AuthModal({ pendingScore, onClose, onAuthenticated }: AuthModalProps) {
                 disabled={isSubmitting}
                 className="w-full rounded-xl bg-[var(--color-emphasis)] px-4 py-3 text-base font-black text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Create Account
+                {isSubmitting ? "Creating Account..." : "Create Account"}
               </button>
+
+              {isSubmitting && (
+                <BlockLoading
+                  size="sm"
+                  label="Creating account..."
+                  className="pt-1"
+                />
+              )}
 
               <div className="border-t border-[var(--color-nav-border)] pt-5 text-center text-sm font-bold text-[var(--color-text-primary)] opacity-80">
                 Already have an account?{" "}

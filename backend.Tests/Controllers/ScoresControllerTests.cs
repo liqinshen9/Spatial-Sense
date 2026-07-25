@@ -76,6 +76,45 @@ public class ScoresControllerTests
     }
 
     [Fact]
+    public async Task CreateScore_ReturnsExistingBestWhenNewScoreIsSlower()
+    {
+        await using var context = TestDbContextFactory.Create();
+        var user = await AddUser(context, "Kai", "kai@example.com");
+
+        context.Scores.AddRange(
+            new ScoreEntry
+            {
+                UserId = user.Id,
+                Difficulty = "Medium",
+                ElapsedMilliseconds = 4000,
+                CreatedAt = DateTime.UtcNow.AddMinutes(-2)
+            },
+            new ScoreEntry
+            {
+                UserId = user.Id,
+                Difficulty = "Medium",
+                ElapsedMilliseconds = 2500,
+                CreatedAt = DateTime.UtcNow.AddMinutes(-1)
+            }
+        );
+        await context.SaveChangesAsync();
+
+        var controller = new ScoresController(context);
+
+        var result = await controller.CreateScore(
+            new CreateScoreRequest(user.Id, "Medium", 6000)
+        );
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var score = Assert.IsType<ScoreResponse>(okResult.Value);
+        var storedScores = await context.Scores.ToListAsync();
+
+        Assert.Equal(2500, score.ElapsedMilliseconds);
+        Assert.Single(storedScores);
+        Assert.Equal(2500, storedScores[0].ElapsedMilliseconds);
+    }
+
+    [Fact]
     public async Task GetScores_ReturnsRankingsOrderedByBestElapsedTime()
     {
         await using var context = TestDbContextFactory.Create();

@@ -47,11 +47,16 @@ public class ScoresController : ControllerBase
 
         var difficulty = NormalizeDifficulty(request.Difficulty);
 
-        var existingScore = await _context.Scores
-            .FirstOrDefaultAsync(score =>
+        var existingScores = await _context.Scores
+            .Where(score =>
                 score.UserId == request.UserId &&
                 score.Difficulty == difficulty
-            );
+            )
+            .OrderBy(score => score.ElapsedMilliseconds)
+            .ThenBy(score => score.CreatedAt)
+            .ToListAsync();
+
+        var existingScore = existingScores.FirstOrDefault();
 
         if (existingScore is null)
         {
@@ -69,6 +74,11 @@ public class ScoresController : ControllerBase
         {
             existingScore.ElapsedMilliseconds = request.ElapsedMilliseconds;
             existingScore.CreatedAt = DateTime.UtcNow;
+        }
+
+        if (existingScores.Count > 1)
+        {
+            _context.Scores.RemoveRange(existingScores.Skip(1));
         }
 
         await _context.SaveChangesAsync();

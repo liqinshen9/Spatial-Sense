@@ -218,6 +218,11 @@ public class PuzzleService
             return true;
         }
 
+        if (HasHiddenYellowCube(cubes, targetOrientation))
+        {
+            return true;
+        }
+
         if (difficulty == "Medium" || difficulty == "Difficult")
         {
             return CanMatchUsingOnlyNinetyDegreeRotations(
@@ -369,7 +374,47 @@ public class PuzzleService
         return firstSignature == secondSignature;
     }
 
+    private static bool HasHiddenYellowCube(
+        List<CubeDto> cubes,
+        Quaternion orientation
+    )
+    {
+        var projectedCubes = GetProjectedVisualCubes(cubes, orientation);
+
+        return projectedCubes
+            .GroupBy(cube => new { cube.X, cube.Y })
+            .Any(group =>
+            {
+                var frontZ = group.Max(cube => cube.Z);
+
+                return group.Any(cube =>
+                    cube.ColorIndex == 1 &&
+                    cube.Z < frontZ
+                );
+            });
+    }
+
     private static string GetVisualStateSignature(
+        List<CubeDto> cubes,
+        Quaternion orientation
+    )
+    {
+        var visualCubes = GetProjectedVisualCubes(cubes, orientation)
+            .OrderBy(cube => cube.X)
+            .ThenBy(cube => cube.Y)
+            .ThenBy(cube => cube.Z)
+            .ThenBy(cube => cube.ColorIndex)
+            .Select(cube =>
+                $"{cube.X.ToString(CultureInfo.InvariantCulture)}," +
+                $"{cube.Y.ToString(CultureInfo.InvariantCulture)}," +
+                $"{cube.Z.ToString(CultureInfo.InvariantCulture)}," +
+                $"{cube.ColorIndex}"
+            );
+
+        return string.Join("|", visualCubes);
+    }
+
+    private static List<VisualCube> GetProjectedVisualCubes(
         List<CubeDto> cubes,
         Quaternion orientation
     )
@@ -387,7 +432,7 @@ public class PuzzleService
         var centerY = (minY + maxY) / 2f;
         var centerZ = (minZ + maxZ) / 2f;
 
-        var visualCubes = cubes
+        return cubes
             .Select(cube =>
             {
                 var centeredPosition = new Vector3(
@@ -401,26 +446,14 @@ public class PuzzleService
                     orientation
                 );
 
-                return new
-                {
-                    X = CleanNumber(rotatedPosition.X),
-                    Y = CleanNumber(rotatedPosition.Y),
-                    Z = CleanNumber(rotatedPosition.Z),
-                    ColorIndex = cube.ColorIndex
-                };
+                return new VisualCube(
+                    CleanNumber(rotatedPosition.X),
+                    CleanNumber(rotatedPosition.Y),
+                    CleanNumber(rotatedPosition.Z),
+                    cube.ColorIndex
+                );
             })
-            .OrderBy(cube => cube.X)
-            .ThenBy(cube => cube.Y)
-            .ThenBy(cube => cube.Z)
-            .ThenBy(cube => cube.ColorIndex)
-            .Select(cube =>
-                $"{cube.X.ToString(CultureInfo.InvariantCulture)}," +
-                $"{cube.Y.ToString(CultureInfo.InvariantCulture)}," +
-                $"{cube.Z.ToString(CultureInfo.InvariantCulture)}," +
-                $"{cube.ColorIndex}"
-            );
-
-        return string.Join("|", visualCubes);
+            .ToList();
     }
 
     private static float CleanNumber(float value)
@@ -434,6 +467,13 @@ public class PuzzleService
 
         return rounded;
     }
+
+    private sealed record VisualCube(
+        float X,
+        float Y,
+        float Z,
+        int ColorIndex
+    );
 
     private static BlockOrientationDto ToDto(Quaternion quaternion)
     {

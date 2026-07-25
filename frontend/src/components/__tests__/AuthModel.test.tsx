@@ -76,12 +76,73 @@ describe("AuthModel", () => {
 
     await user.type(screen.getByLabelText(/username/i), "Li");
     await user.type(screen.getByLabelText(/email/i), "li@example.com");
-    await user.type(screen.getByLabelText(/^password$/i), "password123");
-    await user.type(screen.getByLabelText(/confirm password/i), "different-password");
+    await user.type(screen.getByLabelText(/^password$/i), "Password1!");
+    await user.type(screen.getByLabelText(/confirm password/i), "Different1!");
 
     await user.click(screen.getByRole("button", { name: /^create account$/i }));
 
     expect(registerUser).not.toHaveBeenCalled();
+  });
+
+  it("does not register when password does not meet security requirements", async () => {
+    const user = userEvent.setup();
+
+    renderAuthModel();
+
+    await user.click(screen.getByRole("button", { name: /sign up here/i }));
+
+    await user.type(screen.getByLabelText(/username/i), "Li");
+    await user.type(screen.getByLabelText(/email/i), "li@example.com");
+    await user.type(screen.getByLabelText(/^password$/i), "password");
+    await user.type(screen.getByLabelText(/confirm password/i), "password");
+
+    await user.click(screen.getByRole("button", { name: /^create account$/i }));
+
+    expect(screen.getByText(/uppercase, lowercase, number, and special character/i))
+      .toBeInTheDocument();
+    expect(registerUser).not.toHaveBeenCalled();
+  });
+
+  it("shows a clear error when username is already in use", async () => {
+    const user = userEvent.setup();
+    const error = Object.assign(new Error("Username is already in use."), {
+      status: 409,
+    });
+
+    vi.mocked(registerUser).mockRejectedValue(error);
+
+    renderAuthModel();
+
+    await user.click(screen.getByRole("button", { name: /sign up here/i }));
+
+    await user.type(screen.getByLabelText(/username/i), "Li");
+    await user.type(screen.getByLabelText(/email/i), "li@example.com");
+    await user.type(screen.getByLabelText(/^password$/i), "Password1!");
+    await user.type(screen.getByLabelText(/confirm password/i), "Password1!");
+
+    await user.click(screen.getByRole("button", { name: /^create account$/i }));
+
+    expect(await screen.findByText("Username is already in use."))
+      .toBeInTheDocument();
+  });
+
+  it("shows loading animation while creating an account", async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(registerUser).mockReturnValue(new Promise(() => undefined));
+
+    renderAuthModel();
+
+    await user.click(screen.getByRole("button", { name: /sign up here/i }));
+
+    await user.type(screen.getByLabelText(/username/i), "Li");
+    await user.type(screen.getByLabelText(/email/i), "li@example.com");
+    await user.type(screen.getByLabelText(/^password$/i), "Password1!");
+    await user.type(screen.getByLabelText(/confirm password/i), "Password1!");
+
+    await user.click(screen.getByRole("button", { name: /^create account$/i }));
+
+    expect(await screen.findByText("Creating account...")).toBeInTheDocument();
   });
 });
 

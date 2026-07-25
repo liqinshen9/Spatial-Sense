@@ -10,6 +10,10 @@ namespace Backend.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
+    private const string PasswordValidationMessage =
+        "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.";
+    private const string UsernameInUseMessage = "Username is already in use.";
+
     private readonly AppDbContext _context;
     private readonly PasswordService _passwordService;
     private readonly AvatarStorageService _avatarStorageService;
@@ -79,13 +83,18 @@ public class AuthController : ControllerBase
         var name = request.Name.Trim();
         var email = request.Email.Trim().ToLower();
 
+        if (!PasswordMeetsRequirements(request.Password))
+        {
+            return BadRequest(new { message = PasswordValidationMessage });
+        }
+
         var usernameAlreadyExists = await _context.Users.AnyAsync(user =>
             user.Name.ToLower() == name.ToLower()
         );
 
         if (usernameAlreadyExists)
         {
-            return Conflict(new { message = "This username is already taken. Please choose another one." });
+            return Conflict(new { message = UsernameInUseMessage });
         }
 
         var emailAlreadyExists = await _context.Users.AnyAsync(user =>
@@ -132,6 +141,15 @@ public class AuthController : ControllerBase
             user.AvatarUrl,
             user.CreatedAt
         );
+    }
+
+    private static bool PasswordMeetsRequirements(string password)
+    {
+        return password.Length >= 8 &&
+            password.Any(char.IsUpper) &&
+            password.Any(char.IsLower) &&
+            password.Any(char.IsDigit) &&
+            password.Any(character => !char.IsLetterOrDigit(character));
     }
 }
 
