@@ -47,6 +47,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     route: "/",
     target: "tutorial-button",
+    showHighlight: false,
     title: "Tutorial",
     description:
       "You can replay this guide anytime from the Tutorial button in the navbar. Click Exit to exit the tutorial mode.",
@@ -63,7 +64,7 @@ const tutorialSteps: TutorialStep[] = [
     target: "start-game",
     title: "Start Game",
     description:
-      "When you are ready, start the game. The goal is to rotate your block until it matches the target.",
+      "When you are ready, start the game. Be prepared because the timer will start accordingly.",
   },
   {
     route: "/game",
@@ -84,7 +85,7 @@ const tutorialSteps: TutorialStep[] = [
     target: "rotation-step-buttons",
     title: "Rotation Step",
     description:
-      "Choose how many degrees each rotation should apply. Some puzzles need smaller 45 degree rotations.",
+      "Choose how many degrees each rotation should apply. Some puzzles need 45 degree rotations.",
   },
   {
     route: "/game",
@@ -429,6 +430,7 @@ function App() {
         isDarkMode={isDarkMode}
         isSoundEnabled={isSoundEnabled}
         currentUser={currentUser}
+        isTutorialActive={isTutorialOpen}
         onToggleTheme={() => dispatch(toggleTheme())}
         onToggleSound={handleToggleSound}
         onNavigateRequest={handleGuardedNavigate}

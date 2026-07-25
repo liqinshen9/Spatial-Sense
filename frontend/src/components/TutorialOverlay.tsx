@@ -9,9 +9,10 @@ import {
 
 export type TutorialStep = {
   route: string;
-  target: string;
+  target?: string;
   title: string;
   description: string;
+  showHighlight?: boolean;
   visual?: "rotation-demo";
 };
 
@@ -470,11 +471,12 @@ function TutorialOverlay({
   const currentStep = steps[safeStepIndex];
   const isLastStep = safeStepIndex === steps.length - 1;
   const isRotationDemoStep = currentStep?.visual === "rotation-demo";
+  const shouldShowHighlight = currentStep?.showHighlight !== false;
 
   useEffect(() => {
     if (!currentStep) return;
 
-    if (currentStep.visual === "rotation-demo") {
+    if (currentStep.visual === "rotation-demo" || !currentStep.target) {
       setHighlightRect(null);
       setIsTargetReady(true);
       return;
@@ -731,8 +733,8 @@ function TutorialOverlay({
   }
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[90]">
-      {highlightRect && (
+    <div className="pointer-events-auto fixed inset-0 z-[90]">
+      {highlightRect && shouldShowHighlight && (
         <div
           data-testid="tutorial-highlight"
           className={`pointer-events-none fixed rounded-2xl border-2 border-[var(--color-emphasis)] bg-[var(--color-emphasis)]/10 shadow-[0_0_12px_var(--color-emphasis)] transition-all duration-500 ease-out ${

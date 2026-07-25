@@ -66,6 +66,26 @@ describe("Navbar", () => {
     expect(tutorialButton).not.toHaveAttribute("data-tutorial");
     expect(tutorialTarget).toHaveAttribute("data-tutorial", "tutorial-button");
   });
+
+  it("disables page navigation and login while tutorial is active", async () => {
+    const user = userEvent.setup();
+    const props = createNavbarProps({ isTutorialActive: true });
+
+    renderWithRouter(<Navbar {...props} />);
+
+    expect(screen.getByRole("link", { name: /^home$/i }))
+      .toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("link", { name: /^leaderboard$/i }))
+      .toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("button", { name: /^login$/i })).toBeDisabled();
+
+    await user.click(screen.getByRole("link", { name: /^home$/i }));
+    await user.click(screen.getByRole("link", { name: /^leaderboard$/i }));
+    await user.click(screen.getByRole("button", { name: /^login$/i }));
+
+    expect(props.onNavigateRequest).not.toHaveBeenCalled();
+    expect(props.onLoginClick).not.toHaveBeenCalled();
+  });
 });
 
 function createNavbarProps(overrides: Partial<Parameters<typeof Navbar>[0]> = {}) {

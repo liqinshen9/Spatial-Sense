@@ -142,6 +142,39 @@ describe("TutorialOverlay", () => {
     });
   });
 
+  it("positions a tutorial step near its target without showing a highlight", async () => {
+    createTutorialTarget("tutorial-button");
+
+    const steps: TutorialStep[] = [
+      {
+        route: "/",
+        target: "tutorial-button",
+        showHighlight: false,
+        title: "Tutorial",
+        description: "Click Exit to exit the tutorial mode.",
+      },
+    ];
+
+    render(
+      <TutorialOverlay
+        steps={steps}
+        currentStepIndex={0}
+        onNext={vi.fn()}
+        onBack={vi.fn()}
+        onSkip={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Tutorial")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId("tutorial-highlight")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
+    });
+  });
+
   it("shows the rotation demo tutorial modal", () => {
     const steps: TutorialStep[] = [
       {

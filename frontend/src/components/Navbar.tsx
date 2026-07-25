@@ -8,6 +8,7 @@ type NavbarProps = {
   isDarkMode: boolean;
   isSoundEnabled: boolean;
   currentUser: AuthUser | null;
+  isTutorialActive?: boolean;
   onToggleTheme: () => void;
   onToggleSound: () => void;
   onLoginClick: () => void;
@@ -31,6 +32,7 @@ function Navbar({
   isDarkMode,
   isSoundEnabled,
   currentUser,
+  isTutorialActive = false,
   onToggleTheme,
   onToggleSound,
   onLoginClick,
@@ -40,9 +42,13 @@ function Navbar({
   onStartTutorial,
 }: NavbarProps) {
   function getNavClass({ isActive }: { isActive: boolean }) {
-    return isActive
+    return isActive && !isTutorialActive
       ? "whitespace-nowrap rounded-full bg-[var(--color-active-bg)] px-2 py-2 text-xs font-bold text-[var(--color-emphasis)] sm:px-5 sm:text-sm"
-      : "whitespace-nowrap px-2 py-2 text-xs font-bold transition hover:text-[var(--color-emphasis)] sm:px-5 sm:text-sm";
+      : `whitespace-nowrap px-2 py-2 text-xs font-bold transition sm:px-5 sm:text-sm ${
+          isTutorialActive
+            ? "pointer-events-none opacity-45"
+            : "hover:text-[var(--color-emphasis)]"
+        }`;
   }
 
   const avatarSrc = currentUser ? getAvatarSrc(currentUser.avatarUrl) : "";
@@ -85,8 +91,10 @@ function Navbar({
 
         <NavLink
           to="/"
+          aria-disabled={isTutorialActive}
           onClick={(event) => {
             event.preventDefault();
+            if (isTutorialActive) return;
             onNavigateRequest("/");
           }}
           className={getNavClass}
@@ -96,8 +104,10 @@ function Navbar({
 
         <NavLink
           to="/leaderboard"
+          aria-disabled={isTutorialActive}
           onClick={(event) => {
             event.preventDefault();
+            if (isTutorialActive) return;
             onNavigateRequest("/leaderboard");
           }}
           className={getNavClass}
@@ -152,7 +162,8 @@ function Navbar({
         <button
           type="button"
           onClick={onLoginClick}
-          className="shrink-0 rounded-lg bg-[var(--color-emphasis)] px-2.5 py-1.5 text-xs font-bold text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)] sm:px-6 sm:py-2 sm:text-sm"
+          disabled={isTutorialActive}
+          className="shrink-0 rounded-lg bg-[var(--color-emphasis)] px-2.5 py-1.5 text-xs font-bold text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)] disabled:cursor-not-allowed disabled:opacity-45 sm:px-6 sm:py-2 sm:text-sm"
         >
           Login
         </button>
