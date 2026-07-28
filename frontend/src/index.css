@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 :root {
-  --color-bg-primary: red;
+  --color-bg-primary: #002fa5;
   --color-text-primary: #ffffff;
   --color-nav-border: rgba(255, 255, 255, 0.2);
   --color-nav-bg: rgba(0, 27, 92, 0.55);
