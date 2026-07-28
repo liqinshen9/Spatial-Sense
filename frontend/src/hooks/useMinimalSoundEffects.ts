@@ -4,6 +4,7 @@ import {
   playSliderSound,
   playStartGameSound,
   setSoundEffectsEnabled,
+  unlockSoundEffects,
 } from "../utils/soundEffects";
 
 export function useMinimalSoundEffects(isSoundEnabled: boolean) {
@@ -12,10 +13,10 @@ export function useMinimalSoundEffects(isSoundEnabled: boolean) {
   }, [isSoundEnabled]);
 
   useEffect(() => {
-    function handlePointerDown(event: PointerEvent) {
-      const target = event.target as HTMLElement | null;
-
+    function playSoundForTarget(target: HTMLElement | null) {
       if (!target) return;
+
+      unlockSoundEffects();
 
       if (target.closest("[data-sound='off']")) {
         return;
@@ -55,12 +56,41 @@ export function useMinimalSoundEffects(isSoundEnabled: boolean) {
       playButtonSound();
     }
 
+    function handlePointerDown(event: PointerEvent) {
+      playSoundForTarget(event.target as HTMLElement | null);
+    }
+
+    function handleTouchStart() {
+      unlockSoundEffects();
+    }
+
+    function handleClick(event: MouseEvent) {
+      if ("PointerEvent" in window) {
+        return;
+      }
+
+      playSoundForTarget(event.target as HTMLElement | null);
+    }
+
     window.addEventListener("pointerdown", handlePointerDown, {
+      capture: true,
+    });
+    window.addEventListener("touchstart", handleTouchStart, {
+      capture: true,
+      passive: true,
+    });
+    window.addEventListener("click", handleClick, {
       capture: true,
     });
 
     return () => {
       window.removeEventListener("pointerdown", handlePointerDown, {
+        capture: true,
+      });
+      window.removeEventListener("touchstart", handleTouchStart, {
+        capture: true,
+      });
+      window.removeEventListener("click", handleClick, {
         capture: true,
       });
     };

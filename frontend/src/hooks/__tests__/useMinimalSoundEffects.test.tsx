@@ -6,6 +6,7 @@ import {
   playSliderSound,
   playStartGameSound,
   setSoundEffectsEnabled,
+  unlockSoundEffects,
 } from "../../utils/soundEffects";
 
 vi.mock("../../utils/soundEffects", () => ({
@@ -13,6 +14,7 @@ vi.mock("../../utils/soundEffects", () => ({
   playSliderSound: vi.fn(),
   playStartGameSound: vi.fn(),
   setSoundEffectsEnabled: vi.fn(),
+  unlockSoundEffects: vi.fn(),
 }));
 
 describe("useMinimalSoundEffects", () => {
@@ -49,6 +51,15 @@ describe("useMinimalSoundEffects", () => {
     fireEvent.pointerDown(screen.getByRole("button", { name: /quiet/i }));
 
     expect(playButtonSound).toHaveBeenCalledTimes(1);
+  });
+
+  it("unlocks sound effects on mobile touch before playback", () => {
+    render(<SoundHarness isSoundEnabled />);
+
+    fireEvent.touchStart(screen.getByRole("button", { name: /^plain$/i }));
+
+    expect(unlockSoundEffects).toHaveBeenCalledTimes(1);
+    expect(playButtonSound).not.toHaveBeenCalled();
   });
 });
 

@@ -1,6 +1,7 @@
 let audioContext: AudioContext | null = null;
 let soundEnabled = true;
 let lastUiSoundPlayedAt = 0;
+let isAudioUnlocked = false;
 
 type AudioContextConstructor = typeof AudioContext;
 
@@ -34,6 +35,36 @@ function getAudioContext() {
 
 export function setSoundEffectsEnabled(isEnabled: boolean) {
   soundEnabled = isEnabled;
+}
+
+export function unlockSoundEffects() {
+  const context = getAudioContext();
+
+  if (!context) {
+    return;
+  }
+
+  if (context.state === "suspended") {
+    void context.resume();
+  }
+
+  if (isAudioUnlocked) {
+    return;
+  }
+
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  const now = context.currentTime;
+
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.01);
+
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  oscillator.start(now);
+  oscillator.stop(now + 0.01);
+
+  isAudioUnlocked = true;
 }
 
 function playTone({
