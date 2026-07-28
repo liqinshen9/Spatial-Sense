@@ -2,6 +2,7 @@ let audioContext: AudioContext | null = null;
 let soundEnabled = true;
 let lastUiSoundPlayedAt = 0;
 let isAudioUnlocked = false;
+let resumePromise: Promise<void> | null = null;
 
 type AudioContextConstructor = typeof AudioContext;
 
@@ -37,37 +38,52 @@ export function setSoundEffectsEnabled(isEnabled: boolean) {
   soundEnabled = isEnabled;
 }
 
+function resumeAudioContext(context: AudioContext) {
+  if (context.state !== "suspended") {
+    return Promise.resolve();
+  }
+
+  if (!resumePromise) {
+    resumePromise = context.resume().finally(() => {
+      resumePromise = null;
+    });
+  }
+
+  return resumePromise;
+}
+
 export function unlockSoundEffects() {
   const context = getAudioContext();
 
   if (!context) {
-    return;
-  }
-
-  if (context.state === "suspended") {
-    void context.resume();
+    return Promise.resolve();
   }
 
   if (isAudioUnlocked) {
-    return;
+    return resumeAudioContext(context);
   }
 
-  const oscillator = context.createOscillator();
-  const gain = context.createGain();
-  const now = context.currentTime;
-
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.01);
-
-  oscillator.connect(gain);
-  gain.connect(context.destination);
-  oscillator.start(now);
-  oscillator.stop(now + 0.01);
-
   isAudioUnlocked = true;
+
+  return resumeAudioContext(context).then(() => {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const now = context.currentTime;
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(440, now);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.006, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
+
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.03);
+  });
 }
 
-function playTone({
+async function playTone({
   startFrequency,
   endFrequency,
   volume,
@@ -86,9 +102,7 @@ function playTone({
     return;
   }
 
-  if (context.state === "suspended") {
-    void context.resume();
-  }
+  await resumeAudioContext(context);
 
   const now = context.currentTime + delay;
 

@@ -13,10 +13,12 @@ export function useMinimalSoundEffects(isSoundEnabled: boolean) {
   }, [isSoundEnabled]);
 
   useEffect(() => {
+    let lastTouchPlaybackAt = 0;
+
     function playSoundForTarget(target: HTMLElement | null) {
       if (!target) return;
 
-      unlockSoundEffects();
+      void unlockSoundEffects();
 
       if (target.closest("[data-sound='off']")) {
         return;
@@ -61,7 +63,18 @@ export function useMinimalSoundEffects(isSoundEnabled: boolean) {
     }
 
     function handleTouchStart() {
-      unlockSoundEffects();
+      void unlockSoundEffects();
+    }
+
+    function handleTouchEnd(event: TouchEvent) {
+      const now = performance.now();
+
+      if (now - lastTouchPlaybackAt < 120) {
+        return;
+      }
+
+      lastTouchPlaybackAt = now;
+      playSoundForTarget(event.target as HTMLElement | null);
     }
 
     function handleClick(event: MouseEvent) {
@@ -79,6 +92,10 @@ export function useMinimalSoundEffects(isSoundEnabled: boolean) {
       capture: true,
       passive: true,
     });
+    window.addEventListener("touchend", handleTouchEnd, {
+      capture: true,
+      passive: true,
+    });
     window.addEventListener("click", handleClick, {
       capture: true,
     });
@@ -88,6 +105,9 @@ export function useMinimalSoundEffects(isSoundEnabled: boolean) {
         capture: true,
       });
       window.removeEventListener("touchstart", handleTouchStart, {
+        capture: true,
+      });
+      window.removeEventListener("touchend", handleTouchEnd, {
         capture: true,
       });
       window.removeEventListener("click", handleClick, {

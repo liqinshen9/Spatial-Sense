@@ -61,6 +61,15 @@ describe("useMinimalSoundEffects", () => {
     expect(unlockSoundEffects).toHaveBeenCalledTimes(1);
     expect(playButtonSound).not.toHaveBeenCalled();
   });
+
+  it("plays button sounds on mobile touch end", () => {
+    render(<SoundHarness isSoundEnabled />);
+
+    fireEvent.touchEnd(screen.getByRole("button", { name: /^plain$/i }));
+
+    expect(unlockSoundEffects).toHaveBeenCalledTimes(1);
+    expect(playButtonSound).toHaveBeenCalledTimes(1);
+  });
 });
 
 function SoundHarness({ isSoundEnabled }: { isSoundEnabled: boolean }) {
