@@ -59,6 +59,11 @@ export function useMinimalSoundEffects(isSoundEnabled: boolean) {
     }
 
     function handlePointerDown(event: PointerEvent) {
+      if (event.pointerType === "touch") {
+        void unlockSoundEffects();
+        return;
+      }
+
       playSoundForTarget(event.target as HTMLElement | null);
     }
 

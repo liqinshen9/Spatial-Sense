@@ -48,8 +48,7 @@ public class AvatarStorageService
             throw new InvalidOperationException("Avatar file must be an image.");
         }
 
-        var webRootPath = GetWebRootPath();
-        var uploadFolder = Path.Combine(webRootPath, "uploads", "avatars");
+        var uploadFolder = GetUploadFolderPath();
 
         Directory.CreateDirectory(uploadFolder);
 
@@ -74,8 +73,7 @@ public class AvatarStorageService
             return;
         }
 
-        var webRootPath = GetWebRootPath();
-        var uploadFolder = Path.Combine(webRootPath, "uploads", "avatars");
+        var uploadFolder = GetUploadFolderPath();
         var fileName = Path.GetFileName(avatarUrl);
         var filePath = Path.Combine(uploadFolder, fileName);
 
@@ -83,6 +81,26 @@ public class AvatarStorageService
         {
             File.Delete(filePath);
         }
+    }
+
+    public string GetUploadFolderPath()
+    {
+        var azureHomePath = Environment.GetEnvironmentVariable("HOME");
+        var azureSiteName = Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME");
+
+        if (!string.IsNullOrWhiteSpace(azureHomePath) &&
+            !string.IsNullOrWhiteSpace(azureSiteName))
+        {
+            return Path.Combine(
+                azureHomePath,
+                "data",
+                "spatial-sense",
+                "uploads",
+                "avatars"
+            );
+        }
+
+        return Path.Combine(GetWebRootPath(), "uploads", "avatars");
     }
 
     private string GetWebRootPath()

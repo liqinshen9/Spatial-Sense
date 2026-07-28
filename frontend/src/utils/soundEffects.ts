@@ -150,8 +150,8 @@ export function playButtonSound() {
   playTone({
     startFrequency: 520,
     endFrequency: 390,
-    volume: 0.03,
-    duration: 0.05,
+    volume: 0.08,
+    duration: 0.07,
     type: "sine",
   });
 }
@@ -162,8 +162,8 @@ export function playSliderSound() {
   playTone({
     startFrequency: 360,
     endFrequency: 470,
-    volume: 0.025,
-    duration: 0.045,
+    volume: 0.07,
+    duration: 0.065,
     type: "sine",
   });
 }
@@ -172,16 +172,16 @@ export function playStartGameSound() {
   playTone({
     startFrequency: 260,
     endFrequency: 520,
-    volume: 0.035,
-    duration: 0.08,
+    volume: 0.09,
+    duration: 0.1,
     type: "triangle",
   });
 
   playTone({
     startFrequency: 660,
     endFrequency: 920,
-    volume: 0.025,
-    duration: 0.09,
+    volume: 0.07,
+    duration: 0.11,
     delay: 0.06,
     type: "sine",
   });
@@ -191,16 +191,16 @@ export function playPuzzleSolvedSound() {
   playTone({
     startFrequency: 520,
     endFrequency: 720,
-    volume: 0.03,
-    duration: 0.07,
+    volume: 0.08,
+    duration: 0.09,
     type: "sine",
   });
 
   playTone({
     startFrequency: 780,
     endFrequency: 980,
-    volume: 0.022,
-    duration: 0.075,
+    volume: 0.065,
+    duration: 0.095,
     delay: 0.055,
     type: "triangle",
   });
@@ -210,16 +210,16 @@ export function playGameCompleteSound() {
   playTone({
     startFrequency: 420,
     endFrequency: 620,
-    volume: 0.032,
-    duration: 0.07,
+    volume: 0.085,
+    duration: 0.09,
     type: "triangle",
   });
 
   playTone({
     startFrequency: 620,
     endFrequency: 840,
-    volume: 0.026,
-    duration: 0.08,
+    volume: 0.07,
+    duration: 0.1,
     delay: 0.06,
     type: "sine",
   });
@@ -227,8 +227,8 @@ export function playGameCompleteSound() {
   playTone({
     startFrequency: 840,
     endFrequency: 1100,
-    volume: 0.022,
-    duration: 0.09,
+    volume: 0.065,
+    duration: 0.11,
     delay: 0.13,
     type: "sine",
   });
@@ -238,16 +238,16 @@ export function playErrorSound() {
   playTone({
     startFrequency: 220,
     endFrequency: 165,
-    volume: 0.035,
-    duration: 0.08,
+    volume: 0.09,
+    duration: 0.1,
     type: "triangle",
   });
 
   playTone({
     startFrequency: 180,
     endFrequency: 140,
-    volume: 0.025,
-    duration: 0.07,
+    volume: 0.07,
+    duration: 0.09,
     delay: 0.075,
     type: "sine",
   });
@@ -257,16 +257,16 @@ export function playWarningSound() {
   playTone({
     startFrequency: 300,
     endFrequency: 220,
-    volume: 0.035,
-    duration: 0.075,
+    volume: 0.09,
+    duration: 0.095,
     type: "triangle",
   });
 
   playTone({
     startFrequency: 260,
     endFrequency: 190,
-    volume: 0.025,
-    duration: 0.075,
+    volume: 0.07,
+    duration: 0.095,
     delay: 0.07,
     type: "sine",
   });
@@ -276,8 +276,8 @@ export function playSoundToggleOnSound() {
   playTone({
     startFrequency: 440,
     endFrequency: 660,
-    volume: 0.032,
-    duration: 0.07,
+    volume: 0.085,
+    duration: 0.09,
     type: "sine",
     ignoreEnabled: true,
   });
@@ -287,8 +287,8 @@ export function playSoundToggleOffSound() {
   playTone({
     startFrequency: 520,
     endFrequency: 300,
-    volume: 0.028,
-    duration: 0.06,
+    volume: 0.075,
+    duration: 0.08,
     type: "sine",
   });
 }

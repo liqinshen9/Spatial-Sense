@@ -96,6 +96,48 @@ public class AvatarStorageServiceTests : IDisposable
         Assert.True(File.Exists(unrelatedFilePath));
     }
 
+    [Fact]
+    public void GetUploadFolderPath_UsesPersistentAzureStorageWhenRunningInAppService()
+    {
+        var originalHome = Environment.GetEnvironmentVariable("HOME");
+        var originalSiteName = Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME");
+        var azureHomePath = Path.Combine(
+            Path.GetTempPath(),
+            $"avatar-azure-home-{Guid.NewGuid():N}"
+        );
+
+        try
+        {
+            Environment.SetEnvironmentVariable("HOME", azureHomePath);
+            Environment.SetEnvironmentVariable("WEBSITE_SITE_NAME", "spatial-sense-api");
+
+            var service = CreateService();
+
+            var uploadFolderPath = service.GetUploadFolderPath();
+
+            Assert.Equal(
+                Path.Combine(
+                    azureHomePath,
+                    "data",
+                    "spatial-sense",
+                    "uploads",
+                    "avatars"
+                ),
+                uploadFolderPath
+            );
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("HOME", originalHome);
+            Environment.SetEnvironmentVariable("WEBSITE_SITE_NAME", originalSiteName);
+
+            if (Directory.Exists(azureHomePath))
+            {
+                Directory.Delete(azureHomePath, recursive: true);
+            }
+        }
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_webRootPath))

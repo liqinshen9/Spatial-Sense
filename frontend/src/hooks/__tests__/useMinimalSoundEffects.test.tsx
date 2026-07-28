@@ -70,6 +70,21 @@ describe("useMinimalSoundEffects", () => {
     expect(unlockSoundEffects).toHaveBeenCalledTimes(1);
     expect(playButtonSound).toHaveBeenCalledTimes(1);
   });
+
+  it("only unlocks on touch pointer down and waits for touch end to play", () => {
+    render(<SoundHarness isSoundEnabled />);
+
+    fireEvent.pointerDown(screen.getByRole("button", { name: /^plain$/i }), {
+      pointerType: "touch",
+    });
+
+    expect(unlockSoundEffects).toHaveBeenCalledTimes(1);
+    expect(playButtonSound).not.toHaveBeenCalled();
+
+    fireEvent.touchEnd(screen.getByRole("button", { name: /^plain$/i }));
+
+    expect(playButtonSound).toHaveBeenCalledTimes(1);
+  });
 });
 
 function SoundHarness({ isSoundEnabled }: { isSoundEnabled: boolean }) {

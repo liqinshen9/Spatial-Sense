@@ -96,7 +96,8 @@ builder.Services.AddSingleton<AvatarStorageService>();
 var app = builder.Build();
 
 var webRootPath = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
-var avatarFolderPath = Path.Combine(webRootPath, "uploads", "avatars");
+var avatarStorageService = app.Services.GetRequiredService<AvatarStorageService>();
+var avatarFolderPath = avatarStorageService.GetUploadFolderPath();
 
 Directory.CreateDirectory(avatarFolderPath);
 
@@ -112,6 +113,12 @@ app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(webRootPath),
     RequestPath = ""
+});
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(avatarFolderPath),
+    RequestPath = "/uploads/avatars"
 });
 
 app.MapGet("/health", () => "Backend is running!");
