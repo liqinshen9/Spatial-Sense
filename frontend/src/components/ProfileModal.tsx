@@ -5,9 +5,8 @@ import {
   updateUserAvatar,
   type ApiError,
 } from "../api/users";
+import { API_BASE_URL } from "../api/config";
 import { playWarningSound } from "../utils/soundEffects";
-
-const API_BASE_URL = "http://localhost:5000";
 
 type ProfileModalProps = {
   currentUser: AuthUser;

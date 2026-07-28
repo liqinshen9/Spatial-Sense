@@ -1,8 +1,7 @@
 import { VolumeNotice, VolumeMute, SunOne, Moon } from "@icon-park/react";
 import { NavLink } from "react-router-dom";
+import { API_BASE_URL } from "../api/config";
 import type { AuthUser } from "../types/auth";
-
-const API_BASE_URL = "http://localhost:5000";
 
 type NavbarProps = {
   isDarkMode: boolean;

@@ -103,13 +103,18 @@ Directory.CreateDirectory(avatarFolderPath);
 app.UseCors("Frontend");
 app.UseRateLimiter();
 
+app.UseDefaultFiles(new DefaultFilesOptions
+{
+    FileProvider = new PhysicalFileProvider(webRootPath)
+});
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(webRootPath),
     RequestPath = ""
 });
 
-app.MapGet("/", () => "Backend is running!");
+app.MapGet("/health", () => "Backend is running!");
 
 app.MapGet("/api/users", async (AppDbContext db) =>
 {
@@ -159,5 +164,12 @@ app.MapGet("/api/puzzles/{id:int}", (int id, PuzzleService puzzleService) =>
     return Results.Ok(puzzle);
 }).RequireRateLimiting("Api");
 
+app.MapMethods(
+    "/api/{**path}",
+    new[] { "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD" },
+    () => Results.NotFound()
+).RequireRateLimiting("Api");
+
+app.MapFallbackToFile("index.html");
 
 app.Run();

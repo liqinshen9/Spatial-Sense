@@ -610,13 +610,6 @@ const displayedPuzzlePenaltyMilliseconds =
     ? difficultPenaltyPerExtraRotationMilliseconds
     : puzzlePenaltyMilliseconds;
 
-  const stepsLeft = Math.max(
-    totalProgressSteps -
-      currentProgressStep +
-      (isSolved || isGameComplete ? 0 : 1),
-    0
-  );
-
   return (
     <section className="relative z-10 min-h-[calc(100vh-56px)] overflow-y-auto px-4 py-5 lg:h-[calc(100vh-56px)] lg:overflow-hidden lg:px-8 lg:py-6">
       {isLoadingPuzzle && !puzzleError && (
@@ -670,10 +663,6 @@ const displayedPuzzlePenaltyMilliseconds =
 
             <p className="mt-2 text-2xl font-black text-[var(--color-emphasis)]">
               {formatTime(displayedElapsedMilliseconds)}
-            </p>
-
-            <p className="mt-2 text-[10px] font-bold text-[var(--color-text-primary)] opacity-70">
-              {stepsLeft} steps left
             </p>
 
             {shouldShowPenaltyStatus && (

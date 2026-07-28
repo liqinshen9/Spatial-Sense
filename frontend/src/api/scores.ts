@@ -1,11 +1,10 @@
 import type { CreateScorePayload, Difficulty, ScoreRanking } from "../types/score";
-
-const API_BASE_URL = "http://localhost:5000";
+import { API_BASE_URL, fetchWithRetry } from "./config";
 
 export async function getScoresByDifficulty(
   difficulty: Difficulty
 ): Promise<ScoreRanking[]> {
-  const response = await fetch(
+  const response = await fetchWithRetry(
     `${API_BASE_URL}/api/scores?difficulty=${difficulty}`
   );
 

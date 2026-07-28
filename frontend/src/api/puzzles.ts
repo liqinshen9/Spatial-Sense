@@ -1,11 +1,10 @@
 import type { PuzzleDto } from "../types/puzzle";
-
-const API_BASE_URL = "http://localhost:5000";
+import { API_BASE_URL, fetchWithRetry } from "./config";
 
 export async function getRandomPuzzle(
   difficulty: string
 ): Promise<PuzzleDto> {
-  const response = await fetch(
+  const response = await fetchWithRetry(
     `${API_BASE_URL}/api/puzzles/random?difficulty=${difficulty}`
   );
 

@@ -41,4 +41,8 @@ lerna-debug.log*
 **/appsettings.Development.json
 **/appsettings.Local.json
 
+# Local deployment output
+backend/publish/
+backend/publish.zip
+
 backend/wwwroot/uploads/avatars/*

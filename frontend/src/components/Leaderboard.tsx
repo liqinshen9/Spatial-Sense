@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { API_BASE_URL } from "../api/config";
 import { getScoresByDifficulty } from "../api/scores";
 import type { Difficulty, ScoreRanking } from "../types/score";
 import type { AuthUser } from "../types/auth";
 import BlockLoading from "./BlockLoading";
 
-const API_BASE_URL = "http://localhost:5000";
 const playersPerPage = 5;
 
 type LeaderboardPageProps = {
