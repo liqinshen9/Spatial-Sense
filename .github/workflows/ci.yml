@@ -53,10 +53,24 @@ jobs:
         run: dotnet build backend/Backend.csproj --configuration Release --no-restore
 
       - name: Run backend tests
-        run: dotnet test backend.Tests/Backend.Tests.csproj --configuration Release --no-build
+        run: dotnet test backend.Tests/Backend.Tests.csproj --configuration Release
 
       - name: Publish backend
         run: dotnet publish backend/Backend.csproj --configuration Release --output publish
+
+      - name: Verify frontend files are in publish output
+        run: |
+          test -f publish/wwwroot/index.html
+          test -d publish/wwwroot/assets
+          grep -o "assets/index-[^\"]*\.js" publish/wwwroot/index.html
+
+      - name: Create deployment zip
+        if: github.event_name == 'push'
+        run: |
+          cd publish
+          zip -r ../publish.zip .
+          cd ..
+          unzip -l publish.zip | grep "wwwroot/index.html"
 
       - name: Deploy to Azure App Service
         if: github.event_name == 'push'
@@ -64,4 +78,4 @@ jobs:
         with:
           app-name: spatial-sense-api
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: publish
+          package: publish.zip
