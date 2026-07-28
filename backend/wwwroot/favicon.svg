@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Spatial Reasoning Game">
+  <rect width="32" height="32" rx="7" fill="#002FA5"/>
+  <path fill="#FFFFFF" d="M16 5.5 25.7 11.2 16 16.9 6.3 11.2 16 5.5z"/>
+  <path fill="#C6F333" d="M6.3 11.2 16 16.9v9.6l-9.7-5.7v-9.6z"/>
+  <path fill="#FFFA17" d="M25.7 11.2v9.6L16 26.5v-9.6l9.7-5.7z"/>
+  <path fill="none" stroke="#FFFFFF" stroke-width="1.05" stroke-linejoin="round" d="M16 5.5 25.7 11.2v9.6L16 26.5 6.3 20.8v-9.6L16 5.5z"/>
+  <path fill="none" stroke="#001B5C" stroke-opacity="0.62" stroke-width="0.75" stroke-linejoin="round" d="M6.3 11.2 16 16.9l9.7-5.7M16 16.9v9.6"/>
+  <path fill="none" stroke="#F7FFD3" stroke-opacity="0.9" stroke-width="0.55" stroke-linejoin="round" d="M16 7.2 22.7 11.2 16 15.1 9.3 11.2 16 7.2z"/>
+</svg>
