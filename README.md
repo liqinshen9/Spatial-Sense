@@ -1,7 +1,4 @@
 # Spatial Sense
-
-Deployment link: [Spatial Sense](<deployment-link-here>)
-
 Spatial Sense is a gamified spatial reasoning test where players solve a series of 3D block-rotation puzzles as quickly and accurately as possible. Instead of answering traditional static test questions, the player interacts with a live 3D object, rotates it around the X, Y, and Z axes, and tries to match it to a target shape.
 
 The project is built as a full-stack web application with a React frontend. This project uses .NET for the backend, implemented as an ASP.NET Core Web API with Entity Framework Core for database access. It includes generated spatial puzzles, selectable difficulty levels, timed gameplay, user accounts, score saving, and a leaderboard.
@@ -60,10 +57,18 @@ Other advanced features implemented:
 
    The backend uses separate rate-limiting policies for general API requests, authentication requests, and write requests. This improves reliability by reducing excessive traffic to sensitive endpoints such as login, registration, and score submission.
 
+## Deployment
+
+- Application: [https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/](https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/)
+- Backend API prefix: `https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/api`
+- Example API endpoint: [https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/api/puzzles/random](https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/api/puzzles/random)
+- Scalar API docs: [https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/scalar/v1](https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/scalar/v1)
+
 ## Tech Stack
 
 - Frontend: React, TypeScript, Vite, Tailwind CSS, Redux Toolkit, React Router, Three.js, React Three Fiber.
-- Backend: ASP.NET Core (.NET 10), Entity Framework Core, SQL Server
+- Backend: ASP.NET Core (.NET 10), Entity Framework Core, SQL Server, OpenAPI, Scalar API docs.
+- Deployment: Azure App Service for the deployed ASP.NET Core app, backend API, static frontend assets, and API documentation.
 - Testing: Vitest, Cypress, xUnit.
 
 ## Running the Project
