@@ -333,7 +333,7 @@ function GamePage({
   const [selectedRotationStep, setSelectedRotationStep] =
     useState<RotationStep>(90);
 
-  const [selectedAxis, setSelectedAxis] = useState<Axis | null>(null);
+  const [selectedAxis, setSelectedAxis] = useState<Axis>("Y");
   const [hoveredAxis, setHoveredAxis] = useState<Axis | null>(null);
 
   const [currentProgressStep, setCurrentProgressStep] = useState(1);
@@ -416,7 +416,7 @@ function GamePage({
       setIsLoadingPuzzle(true);
       setPuzzleError("");
       setIsSolved(false);
-      setSelectedAxis(null);
+      setSelectedAxis("Y");
       setHoveredAxis(null);
       setBlockOrientation(identityOrientation);
       resetPuzzlePenaltyState();
@@ -467,7 +467,7 @@ function GamePage({
     setIsGameComplete(false);
     setIsSolved(false);
     setSelectedRotationStep(90);
-    setSelectedAxis(null);
+    setSelectedAxis("Y");
     setHoveredAxis(null);
     setBlockOrientation(identityOrientation);
     resetAllPenaltyState();
@@ -533,15 +533,15 @@ function GamePage({
     }, 800);
   }
 
-  function handleRotate(axis: Axis) {
+  function handleRotate(rotationStep: RotationStep) {
     if (!puzzle || isLoadingPuzzle || isSolved || isGameComplete) return;
 
-    setSelectedAxis(axis);
+    setSelectedRotationStep(rotationStep);
 
     const nextOrientation = getNextOrientation(
       blockOrientation,
-      axis,
-      selectedRotationStep
+      selectedAxis,
+      rotationStep
     );
 
     setBlockOrientation(nextOrientation);
@@ -571,7 +571,7 @@ function GamePage({
     }
 
     setBlockOrientation(identityOrientation);
-    setSelectedAxis(null);
+    setSelectedAxis("Y");
     setHoveredAxis(null);
   }
 
@@ -702,13 +702,13 @@ const displayedPuzzlePenaltyMilliseconds =
 
           <div className="px-0 py-2 lg:px-5 lg:py-3">
             <p className="text-center text-xs font-black uppercase tracking-[0.24em] text-[var(--color-emphasis)]">
-              Rotation Step
+              Rotation Controls
             </p>
 
             <div className="mt-4 flex flex-col items-center gap-3">
               <div
                 data-tutorial="rotation-step-buttons"
-                className="flex items-center justify-center gap-2 lg:gap-3"
+                className="order-3 flex items-center justify-center gap-2 lg:gap-3"
               >
                 {([-90, -45, 45, 90] as RotationStep[]).map((step) => {
                   const isActive = selectedRotationStep === step;
@@ -717,15 +717,17 @@ const displayedPuzzlePenaltyMilliseconds =
                     <button
                       key={step}
                       type="button"
+                      data-sound="off"
                       disabled={isLoadingPuzzle || isSolved || isGameComplete}
-                      onClick={() => setSelectedRotationStep(step)}
+                      onClick={() => handleRotate(step)}
+                      aria-label={`Rotate ${selectedAxis} axis by ${step} degrees`}
                       className={`min-w-[56px] rounded-xl border px-3 py-2 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-40 lg:min-w-[78px] lg:px-4 lg:text-base ${
                         isActive
                           ? "border-[var(--color-emphasis)] bg-[var(--color-emphasis)] text-[var(--color-emphasis-contrast)]"
                           : "border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] text-[var(--color-text-primary)] hover:border-[var(--color-emphasis)] hover:text-[var(--color-emphasis)]"
                       }`}
                     >
-                      {step}°
+                      {step}&deg;
                     </button>
                   );
                 })}
@@ -733,7 +735,7 @@ const displayedPuzzlePenaltyMilliseconds =
 
               <div
                 data-tutorial="rotation-axis-buttons"
-                className="flex items-center justify-center gap-2 lg:gap-3"
+                className="order-1 flex items-center justify-center gap-2 lg:gap-3"
               >
                 {(["X", "Y", "Z"] as Axis[]).map((axis) => {
                   const isHighlightedAxis = highlightedAxis === axis;
@@ -742,8 +744,8 @@ const displayedPuzzlePenaltyMilliseconds =
                     <button
                       key={axis}
                       type="button"
-                      data-sound="off"
                       disabled={isLoadingPuzzle || isSolved || isGameComplete}
+                      aria-pressed={selectedAxis === axis}
                       onPointerEnter={(event) => {
                         if (event.pointerType === "mouse") {
                           setHoveredAxis(axis);
@@ -754,21 +756,21 @@ const displayedPuzzlePenaltyMilliseconds =
                           setHoveredAxis(null);
                         }
                       }}
-                      onClick={() => handleRotate(axis)}
-                      className={`min-w-[88px] rounded-xl border px-3 py-2 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-40 lg:min-w-[102px] lg:px-4 lg:text-base ${
+                      onClick={() => setSelectedAxis(axis)}
+                      className={`min-w-[74px] rounded-xl border px-3 py-2 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-40 lg:min-w-[88px] lg:px-4 lg:text-base ${
                         isHighlightedAxis
                           ? "border-[var(--color-emphasis)] bg-[var(--color-emphasis)] text-[var(--color-emphasis-contrast)]"
                           : "border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] text-[var(--color-text-primary)]"
                       }`}
                     >
-                      Rotate {axis}
+                      {axis} axis
                     </button>
                   );
                 })}
               </div>
 
               {isGameComplete && (
-                <p className="text-sm font-black text-[var(--color-success-border)]">
+                <p className="order-4 text-sm font-black text-[var(--color-success-border)]">
                   Completed all puzzles!
                 </p>
               )}

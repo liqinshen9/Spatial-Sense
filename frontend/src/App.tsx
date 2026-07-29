@@ -82,17 +82,17 @@ const tutorialSteps: TutorialStep[] = [
   },
   {
     route: "/game",
-    target: "rotation-step-buttons",
-    title: "Rotation Step",
+    target: "rotation-axis-buttons",
+    title: "Rotation Axis",
     description:
-      "Choose how many degrees each rotation should apply. Some puzzles need 45 degree rotations.",
+      "Choose the X, Y, or Z axis you want to rotate around.",
   },
   {
     route: "/game",
-    target: "rotation-axis-buttons",
-    title: "Rotate X, Y, and Z",
+    target: "rotation-step-buttons",
+    title: "Rotation Degrees",
     description:
-      "Use these buttons to rotate the block around different axes.",
+      "Click a degree button to rotate the selected axis. Some puzzles need 45 degree rotations.",
   },
   {
     route: "/game",

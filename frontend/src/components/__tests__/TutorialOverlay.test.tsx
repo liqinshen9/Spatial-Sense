@@ -205,8 +205,8 @@ describe("TutorialOverlay", () => {
     expect(screen.getByText("Current")).toBeInTheDocument();
     expect(screen.getByText("Target")).toBeInTheDocument();
 
-    expect(screen.getByText("Rotation Step")).toBeInTheDocument();
-    expect(screen.getByText("Rotate Y")).toBeInTheDocument();
+    expect(screen.getByText("Choose Axis")).toBeInTheDocument();
+    expect(screen.getByText("Y axis")).toBeInTheDocument();
 
     expect(screen.getAllByTestId("mock-canvas")).toHaveLength(2);
     expect(screen.getByRole("button", { name: /^finish$/i }))

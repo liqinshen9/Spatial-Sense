@@ -312,12 +312,12 @@ function DemoBlockCanvas({
 
 function RotationControlsDemo() {
   return (
-    <div className="rounded-[24px] bg-[var(--color-bg-primary)]/85 p-4 text-center shadow-xl">
+    <div className="flex flex-col rounded-[24px] bg-[var(--color-bg-primary)]/85 p-4 text-center shadow-xl">
       <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-text-primary)]">
-        Rotation Step
+        Choose Axis
       </p>
 
-      <div className="mt-4 grid grid-cols-4 gap-2">
+      <div className="order-3 mt-3 grid grid-cols-4 gap-2">
         {["-90°", "-45°", "45°", "90°"].map((angle) => {
           const isActive = angle === "90°";
 
@@ -336,22 +336,22 @@ function RotationControlsDemo() {
         })}
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-2">
+      <div className="order-2 mt-4 grid grid-cols-3 gap-2">
         <div className="rounded-lg bg-[var(--color-leaderboard-row)] px-2 py-2 text-xs font-black text-[var(--color-text-primary)]">
-          Rotate X
+          X axis
         </div>
 
         <div className="rounded-lg bg-[var(--color-emphasis)] px-2 py-2 text-xs font-black text-[var(--color-emphasis-contrast)]">
-          Rotate Y
+          Y axis
         </div>
 
         <div className="rounded-lg bg-[var(--color-leaderboard-row)] px-2 py-2 text-xs font-black text-[var(--color-text-primary)]">
-          Rotate Z
+          Z axis
         </div>
       </div>
 
-      <p className="mt-4 text-xs font-black leading-5 text-[var(--color-emphasis)]">
-        Rotate 90° around y axis
+      <p className="order-4 mt-4 text-xs font-black leading-5 text-[var(--color-emphasis)]">
+        Pick Y axis, then click 90 degrees
       </p>
     </div>
   );
