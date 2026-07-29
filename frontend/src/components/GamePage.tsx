@@ -249,6 +249,92 @@ function ProgressGrid({
   );
 }
 
+function AxisIndicator({ selectedAxis }: { selectedAxis: Axis }) {
+  const axes = [
+    {
+      axis: "X",
+      color: "#b86a68",
+      end: { x: 114, y: 94 },
+      label: { x: 126, y: 100 },
+    },
+    {
+      axis: "Y",
+      color: "#78a879",
+      end: { x: 80, y: 28 },
+      label: { x: 80, y: 18 },
+    },
+    {
+      axis: "Z",
+      color: "#7489bd",
+      end: { x: 48, y: 94 },
+      label: { x: 36, y: 100 },
+    },
+  ] as const;
+
+  return (
+    <div
+      aria-label={`Axis guide. ${selectedAxis} axis selected.`}
+      className="pointer-events-none relative z-20 mx-auto mt-4 h-[130px] w-[150px] lg:absolute lg:left-full lg:top-1/2 lg:ml-10 lg:mt-0 lg:-translate-y-1/2"
+    >
+      <svg
+        className="h-full w-full overflow-visible"
+        viewBox="0 0 150 130"
+        role="img"
+      >
+        <circle
+          cx="80"
+          cy="72"
+          r="4"
+          fill="#8aaa8b"
+          opacity="0.95"
+        />
+
+        {axes.map(({ axis, color, end, label }) => {
+          const isSelected = selectedAxis === axis;
+
+          return (
+            <g
+              key={axis}
+              opacity={isSelected ? 1 : 0.82}
+              filter={isSelected ? `drop-shadow(0 0 5px ${color})` : undefined}
+            >
+              <line
+                x1="80"
+                y1="72"
+                x2={end.x}
+                y2={end.y}
+                stroke={color}
+                strokeLinecap="round"
+                strokeWidth={isSelected ? 5 : 3}
+              />
+
+              <circle
+                cx={label.x}
+                cy={label.y}
+                r={isSelected ? 14 : 13}
+                fill={color}
+                opacity="0.95"
+              />
+
+              <text
+                x={label.x}
+                y={label.y}
+                fill="#17334f"
+                fontSize={isSelected ? 15 : 14}
+                fontWeight="800"
+                textAnchor="middle"
+                dominantBaseline="middle"
+              >
+                {axis}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
 function GameCompleteModal({
   finalTime,
   isLoggedIn,
@@ -677,27 +763,31 @@ const displayedPuzzlePenaltyMilliseconds =
         </aside>
 
         <main className="order-2 flex min-h-0 flex-col gap-4 lg:order-none lg:h-full lg:gap-5">
-          <div
-            data-tutorial="player-block"
-            className={`relative mx-auto flex aspect-square w-full max-w-[330px] items-center justify-center rounded-[28px] border transition-colors duration-200 lg:w-[min(36vw,430px)] lg:max-w-none lg:rounded-[32px] ${
-              isSolved
-                ? "border-4 border-[var(--color-success-border)] bg-[var(--color-success-bg)] ring-4 ring-[var(--color-success-ring)]"
-                : "border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)]"
-            }`}
-          >
-            {!isLoadingPuzzle && puzzleError && (
-              <p className="text-sm font-bold text-[var(--color-emphasis)]">
-                {puzzleError}
-              </p>
-            )}
+          <div className="relative mx-auto w-full max-w-[330px] lg:w-[min(36vw,430px)] lg:max-w-none">
+            <div
+              data-tutorial="player-block"
+              className={`relative flex aspect-square w-full items-center justify-center rounded-[28px] border transition-colors duration-200 lg:rounded-[32px] ${
+                isSolved
+                  ? "border-4 border-[var(--color-success-border)] bg-[var(--color-success-bg)] ring-4 ring-[var(--color-success-ring)]"
+                  : "border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)]"
+              }`}
+            >
+              {!isLoadingPuzzle && puzzleError && (
+                <p className="text-sm font-bold text-[var(--color-emphasis)]">
+                  {puzzleError}
+                </p>
+              )}
 
-            {!isLoadingPuzzle && puzzle && (
-              <PuzzleBlockCanvas
-                key={`main-${currentProgressStep}-${puzzle.id}`}
-                cubes={puzzle.cubes}
-                orientation={blockOrientation}
-              />
-            )}
+              {!isLoadingPuzzle && puzzle && (
+                <PuzzleBlockCanvas
+                  key={`main-${currentProgressStep}-${puzzle.id}`}
+                  cubes={puzzle.cubes}
+                  orientation={blockOrientation}
+                />
+              )}
+            </div>
+
+            <AxisIndicator selectedAxis={selectedAxis} />
           </div>
 
           <div className="px-0 py-2 lg:px-5 lg:py-3">
