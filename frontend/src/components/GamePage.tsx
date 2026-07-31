@@ -502,7 +502,6 @@ function GamePage({
       setIsLoadingPuzzle(true);
       setPuzzleError("");
       setIsSolved(false);
-      setSelectedAxis("Y");
       setHoveredAxis(null);
       setBlockOrientation(identityOrientation);
       resetPuzzlePenaltyState();
