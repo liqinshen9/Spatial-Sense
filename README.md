@@ -5,9 +5,9 @@ The project is built as a full-stack web application with a React frontend. This
 
 ## How the Project Relates to Gamification
 
-The theme of this project is gamification. Spatial Sense applies game design ideas to a spatial reasoning test so the assessment feels more engaging, motivating, and replayable.
+Spatial Sense adds gamification features to a traditional static spatial reasoning test. The goal is to make the assessment feel more engaging, motivating, and replayable.
 
-The core test still measures spatial reasoning because players must mentally rotate and compare 3D objects. However, the experience is gamified through:
+The core skill is still spatial reasoning, because players need to mentally rotate and compare 3D objects. The gamified parts are added around that core activity:
 
 - Timed levels that encourage focus and replay.
 - Easy, Medium, and Difficult modes for progression.
@@ -17,15 +17,21 @@ The core test still measures spatial reasoning because players must mentally rot
 - Sound effects, completion feedback, and visual success states.
 - An animated tutorial that teaches the controls before or during play.
 
-This turns a normal spatial reasoning activity into a challenge-based game where the player can practise, compete, and improve.
+Together, these features turn a boring spatial reasoning activity into a challenge-based game where players can practise, compete, and improve over time.
 
 ## What Makes the Project Unique
 
-Spatial Sense is unique because it combines a real cognitive skill test with interactive 3D gameplay. The player is not just choosing an answer from a list; they directly manipulate the object and must understand how each rotation changes the shape.
+Spatial Sense is worth highlighting because it is not only a normal learning app with points or a leaderboard added on top. A lot of gamified learning projects still keep the main activity quite static, such as answering quiz questions or clicking through levels. My project makes the spatial reasoning test activity itself interactive. The player does not just look at a shape and choose an answer. They rotate the 3D block directly, see how the shape changes, and use that interaction to test their spatial reasoning.
 
-The puzzle system also creates variety. The backend generates many connected block shapes across multiple difficulties, including coloured cubes that make orientation matching more precise. Difficult puzzles can require 45-degree rotations and include a penalty system, which adds strategy because unnecessary moves increase the final time.
+Another feature that makes the project different is the puzzle system. The backend does not only show one fixed set of questions. It generates connected block shapes across different difficulties, so the test has more variety. I also added coloured cubes because they make the orientation more precise. Without colours, some blocks can look too similar after rotation, but the coloured cubes force the player to pay attention to the exact direction of the shape.
 
-The project is worth highlighting because it is more than a visual demo. It includes a complete user flow: players can learn through the tutorial, play a timed test, register or log in, save scores, upload an avatar, and compare their ranking on the leaderboard.
+<img src="./docs/images/colored-blocks.png" alt="Colored blocks" width="360">
+
+The difficult mode is also more than just making the blocks harder. It can include 45-degree rotations and a penalty system. This means the player needs to think before rotating, because unnecessary moves can increase the final time. I think this makes the game feel more like a proper challenge instead of just a simple 3D toy.
+
+<img src="./docs/images/penalty.png" alt="Penalty" width="360">
+
+Overall, the unique part of Spatial Sense is that it combines the test, the interaction, and the gamification into one complete flow. The tutorial teaches the controls, the timer and progress make the test feel structured, the penalty system adds strategy, and the saved scores and leaderboard let players compare and improve over time.
 
 ## Basic Requirements
 
@@ -33,25 +39,27 @@ These are the basic requirements checklists.
 
 ## Top 3 Advanced Features Implemented
 
-These are the three advanced features I implemented:
+Top three advanced features to mark are:
 
-1. **Theme switching**
+- [x] **Theme switching**
 
-   The app supports light and dark mode. The selected theme is managed through the global app state and applied across the interface so the gamepage, navigation, leaderboard, modals, and tutorial remain visually consistent.
+  The app supports light and dark mode. The selected theme is managed through the global app state and applied across the interface so the gamepage, navigation, leaderboard, modals, and tutorial remain visually consistent.
 
-2. **State management library**
+- [x] **State management library**
 
-   The frontend uses Redux Toolkit for application-wide state management. It manages shared state such as the selected difficulty, logged-in user, theme mode, sound setting, tutorial progress, modal visibility, pending scores, and warnings before leaving an active game. This keeps the app state consistent across the home page, game page, leaderboard, authentication modal, profile modal, and tutorial.
+  The frontend uses Redux Toolkit for application-wide state management. It manages shared state such as the selected difficulty, logged-in user, theme mode, sound setting, tutorial progress, modal visibility, pending scores, and warnings before leaving an active game. This keeps the app state consistent across the home page, game page, leaderboard, authentication modal, profile modal, and tutorial.
 
-3. **End-to-end testing using Cypress**
+- [x] **End-to-end testing using Cypress**
 
-   The project includes Cypress end-to-end tests for important user flows, including authentication, the home page, tutorial behaviour, and leaderboard behaviour. These tests help verify that the frontend works correctly from a user's perspective and that key interactions continue to work as the application changes.
+  The project includes Cypress end-to-end tests for important user flows, including authentication, the home page, tutorial behaviour, and leaderboard behaviour. These tests help verify that the frontend works correctly from a user's perspective and that key interactions continue to work as the application changes.
 
 Other advanced features implemented:
 
 4. **Security measures**
 
    The project implements multiple security measures that are important for protecting user accounts and backend APIs. Passwords are not stored as plain text; they are hashed before being saved and verified during login. The backend also validates user input for registration, login, score saving, avatar uploads, and user updates so invalid or unsafe data is rejected before it reaches the database. API rate limiting is also used to reduce brute-force login attempts, and repeated write requests.
+
+   The project also includes error handling for common invalid input and temporary service issues. Empty login or registration fields, weak passwords, duplicate usernames or emails, invalid score submissions, missing users, and unsupported avatar files are rejected with clear API responses. On the frontend, loading, empty, and failure states are shown for leaderboard and account actions, while retry handling helps reduce failures caused by temporary database wake-up delays.
 
 5. **API protection and optimisation**
 
