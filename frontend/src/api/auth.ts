@@ -1,5 +1,5 @@
 import type { AuthUser } from "../types/auth";
-import { API_BASE_URL } from "./config";
+import { API_BASE_URL, fetchWithRetry } from "./config";
 
 type LoginPayload = {
   usernameOrEmail: string;
@@ -59,7 +59,7 @@ async function createApiError(response: Response): Promise<ApiError> {
 }
 
 export async function loginUser(payload: LoginPayload): Promise<AuthUser> {
-  const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+  const response = await fetchWithRetry(`${API_BASE_URL}/api/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -85,7 +85,7 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthUser> 
     formData.append("avatar", payload.avatar);
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+  const response = await fetchWithRetry(`${API_BASE_URL}/api/auth/register`, {
     method: "POST",
     body: formData,
   });

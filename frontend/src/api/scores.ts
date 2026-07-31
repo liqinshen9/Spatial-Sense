@@ -18,7 +18,7 @@ export async function getScoresByDifficulty(
 export async function createScore(
   payload: CreateScorePayload
 ): Promise<ScoreRanking> {
-  const response = await fetch(`${API_BASE_URL}/api/scores`, {
+  const response = await fetchWithRetry(`${API_BASE_URL}/api/scores`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -17,6 +17,7 @@ import TutorialOverlay from "./components/TutorialOverlay";
 import type { TutorialStep } from "./components/TutorialOverlay";
 import type { CompletedScore } from "./components/GamePage";
 import type { AuthUser } from "./types/auth";
+import { wakeDatabaseConnection } from "./api/config";
 import { createScore } from "./api/scores";
 import { useMinimalSoundEffects } from "./hooks/useMinimalSoundEffects";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
@@ -153,6 +154,12 @@ function App() {
   );
 
   useMinimalSoundEffects(isSoundEnabled);
+
+  useEffect(() => {
+    wakeDatabaseConnection().catch(() => {
+      // Keep database warm-up invisible; user actions still use retry handling.
+    });
+  }, []);
 
   useEffect(() => {
     const hasSeenTutorial =

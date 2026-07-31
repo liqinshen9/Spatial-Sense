@@ -1,5 +1,5 @@
 import type { AuthUser } from "../types/auth";
-import { API_BASE_URL } from "./config";
+import { API_BASE_URL, fetchWithRetry } from "./config";
 
 export type ApiError = Error & {
   status?: number;
@@ -49,10 +49,13 @@ export async function updateUserAvatar(
   const formData = new FormData();
   formData.append("avatar", avatar);
 
-  const response = await fetch(`${API_BASE_URL}/api/users/${userId}/avatar`, {
-    method: "PUT",
-    body: formData,
-  });
+  const response = await fetchWithRetry(
+    `${API_BASE_URL}/api/users/${userId}/avatar`,
+    {
+      method: "PUT",
+      body: formData,
+    }
+  );
 
   if (!response.ok) {
     throw await createApiError(response);
@@ -62,7 +65,7 @@ export async function updateUserAvatar(
 }
 
 export async function deleteUserAccount(userId: number): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+  const response = await fetchWithRetry(`${API_BASE_URL}/api/users/${userId}`, {
     method: "DELETE",
   });
 

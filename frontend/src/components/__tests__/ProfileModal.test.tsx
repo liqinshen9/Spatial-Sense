@@ -51,6 +51,7 @@ describe("ProfileModal", () => {
   it("uploads a selected avatar and reports the updated user", async () => {
     const user = userEvent.setup();
     const onUserUpdated = vi.fn();
+    const onClose = vi.fn();
     const updatedUser = {
       ...currentUser,
       avatarUrl: "/avatars/li.png",
@@ -58,20 +59,23 @@ describe("ProfileModal", () => {
 
     vi.mocked(updateUserAvatar).mockResolvedValue(updatedUser);
 
-    renderProfileModal({ onUserUpdated });
+    renderProfileModal({ onUserUpdated, onClose });
 
     const avatarFile = new File(["avatar"], "avatar.png", {
       type: "image/png",
     });
 
     await user.upload(screen.getByLabelText(/change avatar/i), avatarFile);
-    await user.click(screen.getByRole("button", { name: /save avatar/i }));
+    expect(screen.queryByRole("button", { name: /save avatar/i }))
+      .not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /confirm avatar/i }));
 
     await waitFor(() => {
       expect(updateUserAvatar).toHaveBeenCalledWith(currentUser.id, avatarFile);
     });
 
     expect(onUserUpdated).toHaveBeenCalledWith(updatedUser);
+    expect(onClose).toHaveBeenCalledTimes(1);
     expect(screen.getByText(/avatar updated/i)).toBeInTheDocument();
   });
 

@@ -154,6 +154,33 @@ describe("Leaderboard", () => {
 
     expect(onOpenProfileModal).toHaveBeenCalled();
   });
+
+  it("uses the latest current user avatar for the current leaderboard row", async () => {
+    vi.mocked(getScoresByDifficulty).mockResolvedValue([
+      {
+        ...mockScores[0],
+        avatarUrl: "/uploads/avatars/old.png",
+      },
+    ]);
+
+    renderWithRouter(
+      <Leaderboard
+        currentUser={{
+          ...mockCurrentUser,
+          avatarUrl: "/uploads/avatars/new.png",
+        }}
+        onOpenProfileModal={vi.fn()}
+      />,
+      "/leaderboard?difficulty=easy"
+    );
+
+    const avatar = await screen.findByAltText("Li's avatar");
+
+    expect(avatar).toHaveAttribute(
+      "src",
+      "http://localhost:5000/uploads/avatars/new.png"
+    );
+  });
 });
 
 function LocationSearch() {

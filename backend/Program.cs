@@ -118,7 +118,11 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(avatarFolderPath),
-    RequestPath = "/uploads/avatars"
+    RequestPath = "/uploads/avatars",
+    OnPrepareResponse = context =>
+    {
+        context.Context.Response.Headers.CacheControl = "public,max-age=604800";
+    }
 });
 
 app.MapGet("/health", () => "Backend is running!");
@@ -137,6 +141,13 @@ app.MapGet("/api/users", async (AppDbContext db) =>
         .ToListAsync();
 
     return Results.Ok(users);
+}).RequireRateLimiting("Api");
+
+app.MapGet("/api/database/wake", async (AppDbContext db) =>
+{
+    await db.Database.ExecuteSqlRawAsync("SELECT 1");
+
+    return Results.Ok(new { status = "ready" });
 }).RequireRateLimiting("Api");
 
 app.MapControllers();

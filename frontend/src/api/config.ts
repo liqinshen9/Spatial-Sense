@@ -44,3 +44,11 @@ export async function fetchWithRetry(
     ? lastError
     : new Error("Request failed.");
 }
+
+export async function wakeDatabaseConnection() {
+  const response = await fetchWithRetry(`${API_BASE_URL}/api/database/wake`);
+
+  if (!response.ok) {
+    throw new Error("Failed to wake database.");
+  }
+}

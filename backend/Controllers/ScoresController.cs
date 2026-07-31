@@ -124,28 +124,50 @@ public class ScoresController : ControllerBase
 
     private async Task<List<ScoreResponse>> GetRankings(string difficulty)
     {
-        var scores = await _context.Scores
-            .Include(score => score.User)
-            .Where(score => score.Difficulty == difficulty)
-            .ToListAsync();
-
-        var bestScores = scores
-            .GroupBy(score => score.UserId)
-            .Select(group => group
-                .OrderBy(score => score.ElapsedMilliseconds)
-                .ThenBy(score => score.CreatedAt)
-                .First())
+        var bestScores = await _context.Scores
+            .AsNoTracking()
+            .Where(score =>
+                score.Difficulty == difficulty &&
+                !_context.Scores.Any(otherScore =>
+                    otherScore.UserId == score.UserId &&
+                    otherScore.Difficulty == score.Difficulty &&
+                    (
+                        otherScore.ElapsedMilliseconds < score.ElapsedMilliseconds ||
+                        (
+                            otherScore.ElapsedMilliseconds == score.ElapsedMilliseconds &&
+                            otherScore.CreatedAt < score.CreatedAt
+                        ) ||
+                        (
+                            otherScore.ElapsedMilliseconds == score.ElapsedMilliseconds &&
+                            otherScore.CreatedAt == score.CreatedAt &&
+                            otherScore.Id < score.Id
+                        )
+                    )
+                )
+            )
+            .Select(score => new
+            {
+                score.Id,
+                score.UserId,
+                Username = score.User.Name,
+                score.User.AvatarUrl,
+                score.Difficulty,
+                score.ElapsedMilliseconds,
+                score.CreatedAt
+            }
+            )
             .OrderBy(score => score.ElapsedMilliseconds)
             .ThenBy(score => score.CreatedAt)
-            .ToList();
+            .ThenBy(score => score.Id)
+            .ToListAsync();
 
         return bestScores
             .Select((score, index) => new ScoreResponse(
                 score.Id,
                 index + 1,
                 score.UserId,
-                score.User.Name,
-                score.User.AvatarUrl,
+                score.Username,
+                score.AvatarUrl,
                 score.Difficulty,
                 score.ElapsedMilliseconds,
                 FormatTime(score.ElapsedMilliseconds),

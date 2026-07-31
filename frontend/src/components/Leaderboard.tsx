@@ -37,6 +37,17 @@ function getAvatarSrc(avatarUrl: string | null) {
   return `${API_BASE_URL}${avatarUrl}`;
 }
 
+function preloadAvatarImages(rankings: ScoreRanking[]) {
+  rankings.forEach((player) => {
+    const avatarSrc = getAvatarSrc(player.avatarUrl);
+
+    if (!avatarSrc) return;
+
+    const image = new Image();
+    image.src = avatarSrc;
+  });
+}
+
 function getVisiblePageNumbers(currentPage: number, totalPages: number) {
   const maxVisiblePages = 5;
 
@@ -102,6 +113,7 @@ function LeaderboardPage({
 
         const scores = await getScoresByDifficulty(selectedDifficulty);
         setRankings(scores);
+        preloadAvatarImages(scores);
       } catch {
         setError("Failed to load leaderboard.");
       } finally {
@@ -111,6 +123,24 @@ function LeaderboardPage({
 
     loadLeaderboard();
   }, [selectedDifficulty]);
+
+  useEffect(() => {
+    if (!currentUser?.avatarUrl) return;
+
+    preloadAvatarImages([
+      {
+        id: 0,
+        rank: 0,
+        userId: currentUser.id,
+        username: currentUser.name,
+        avatarUrl: currentUser.avatarUrl,
+        difficulty: selectedDifficulty,
+        elapsedMilliseconds: 0,
+        time: "",
+        createdAt: currentUser.createdAt,
+      },
+    ]);
+  }, [currentUser, selectedDifficulty]);
 
   useEffect(() => {
     if (!highlightScoreId || rankings.length === 0 || !currentUser) return;
@@ -212,7 +242,10 @@ function LeaderboardPage({
                 const isHighlighted =
                   isCurrentUser && player.id === highlightScoreId;
 
-                const avatarSrc = getAvatarSrc(player.avatarUrl);
+                const avatarUrl = isCurrentUser && currentUser
+                  ? currentUser.avatarUrl
+                  : player.avatarUrl;
+                const avatarSrc = getAvatarSrc(avatarUrl);
 
                 return (
                   <div
@@ -253,6 +286,8 @@ function LeaderboardPage({
                           <img
                             src={avatarSrc}
                             alt={`${player.username}'s avatar`}
+                            loading="eager"
+                            decoding="async"
                             className="h-full w-full object-cover"
                           />
                         ) : (

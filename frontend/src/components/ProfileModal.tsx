@@ -78,6 +78,7 @@ function ProfileModal({
       setAvatarFile(null);
       setAvatarPreviewUrl("");
       setMessage("Avatar updated.");
+      onClose();
     } catch (error) {
       const apiError = error as ApiError;
       setMessage(apiError.message || "Failed to update avatar.");
@@ -169,13 +170,19 @@ function ProfileModal({
             />
           </label>
 
-          <button
-            type="submit"
-            disabled={isSubmitting || !avatarFile}
-            className="w-full rounded-xl bg-[var(--color-emphasis)] px-4 py-3 text-base font-black text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSubmitting ? "Saving..." : "Save Avatar"}
-          </button>
+          {avatarFile ? (
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-xl bg-[var(--color-emphasis)] px-4 py-3 text-base font-black text-[var(--color-emphasis-contrast)] transition hover:bg-[var(--color-emphasis-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting ? "Updating..." : "Confirm Avatar"}
+            </button>
+          ) : (
+            <p className="rounded-xl border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-row)] px-4 py-3 text-center text-sm font-bold text-[var(--color-text-primary)] opacity-70">
+              Choose a new image to update your avatar.
+            </p>
+          )}
         </form>
 
         <div className="mt-7 border-t border-[var(--color-nav-border)] pt-5">
