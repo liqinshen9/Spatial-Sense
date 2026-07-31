@@ -1,7 +1,16 @@
 # Spatial Sense
+
+## Deployment
+
+- Application: [https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/](https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/)
+- Backend API prefix: `https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/api`
+- Example API endpoint: [https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/api/puzzles/random](https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/api/puzzles/random)
+- Scalar API docs: [https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/scalar/v1](https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/scalar/v1)
+
+## Introduction
 Spatial Sense is a gamified spatial reasoning test where players solve a series of 3D block-rotation puzzles as quickly and accurately as possible. Instead of answering traditional static test questions, the player interacts with a live 3D object, rotates it around the X, Y, and Z axes, and tries to match it to a target shape.
 
-The project is built as a full-stack web application with a React frontend. This project uses .NET for the backend, implemented as an ASP.NET Core Web API with Entity Framework Core for database access. It includes generated spatial puzzles, selectable difficulty levels, timed gameplay, user accounts, score saving, and a leaderboard.
+The project is built as a full-stack web application with a React frontend. This project uses .NET for the backend, implemented as an ASP.NET Core Web API with Entity Framework Core for database access. 
 
 ## How the Project Relates to Gamification
 
@@ -33,9 +42,6 @@ The difficult mode is also more than just making the blocks harder. It can inclu
 
 Overall, the unique part of Spatial Sense is that it combines the test, the interaction, and the gamification into one complete flow. The tutorial teaches the controls, the timer and progress make the test feel structured, the penalty system adds strategy, and the saved scores and leaderboard let players compare and improve over time.
 
-## Basic Requirements
-
-These are the basic requirements checklists.
 
 ## Top 3 Advanced Features Implemented
 
@@ -65,12 +71,38 @@ Other advanced features implemented:
 
    The backend uses separate rate-limiting policies for general API requests, authentication requests, and write requests. This improves reliability by reducing excessive traffic to sensitive endpoints such as login, registration, and score submission.
 
-## Deployment
+## Basic Requirements
 
-- Application: [https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/](https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/)
-- Backend API prefix: `https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/api`
-- Example API endpoint: [https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/api/puzzles/random](https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/api/puzzles/random)
-- Scalar API docs: [https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/scalar/v1](https://spatial-sense-api-ajacahh2gpa7hrhz.japaneast-01.azurewebsites.net/scalar/v1)
+### Frontend
+
+- [x] Built using React with TypeScript.
+- [x] Responsive and visually styled UI for desktop and mobile.
+- [x] Navigation uses React Router.
+- [x] Frontend is deployed with the application. The React frontend is built into static assets and deployed with the ASP.NET Core App Service. The backend serves these frontend assets together with the API, so the deployed application includes both the frontend interface and backend functionality.
+- [x] Unit tests cover key frontend components and functionality.
+
+### Backend
+
+- [x] Built using C# with .NET 10.
+- [x] Uses Entity Framework Core.
+- [x] Uses SQL Server for data persistence.
+- [x] Implements CRUD operations for user accounts.
+- [x] Backend is deployed with the application.
+- [x] Unit tests cover key backend controllers and services.
+- [x] Scalar API documentation is exposed.
+
+### Project management
+
+- [x] Comprehensive Git usage with regular commits showing development progress.
+- [x] Proper `.gitignore` is included to avoid committing build output, dependencies, local configuration, and sensitive files.
+
+This project significantly exceeds the minimum requirements:
+
+- [x] **All basic requirements** are implemented and documented.
+- [x] **At least 3 advanced requirements** are implemented, including theme switching, Redux state management, and Cypress end-to-end testing.
+- [x] **Complete full-stack user flow** from tutorial, gameplay, authentication, score saving, avatar upload, and leaderboard ranking.
+- [x] **Theme compliance** through a gamified spatial reasoning experience with interactive 3D block rotation, timed challenges, progress feedback, and penalty mechanics.
+- [x] **Robustness features** including input validation, API rate limiting, retry handling, and clear frontend loading/error states.
 
 ## Tech Stack
 
@@ -149,8 +181,6 @@ Make sure the backend is still running while using the frontend, because the fro
 
 
 ## Self Reflection
-
-I am very proud of the project idea because I think a gamified spatial reasoning test has strong potential. It makes an abstract cognitive skill more interactive, visual, and engaging for users. However, I also recognize that the project is not perfect.
 
 If I were to do this project again, I would explore adding more transformation types, more varied shapes, and more puzzle mechanics. I did not implement too many extra transformations in this version because I wanted to avoid increasing the user's cognitive load and keep the interface clear and easy to understand.
 
