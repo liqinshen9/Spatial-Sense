@@ -19,6 +19,7 @@ import type { CompletedScore } from "./components/GamePage";
 import type { AuthUser } from "./types/auth";
 import { wakeDatabaseConnection } from "./api/config";
 import { createScore } from "./api/scores";
+import { getUser } from "./api/users";
 import { useMinimalSoundEffects } from "./hooks/useMinimalSoundEffects";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import {
@@ -143,9 +144,11 @@ function App() {
     isTutorialOpen,
     tutorialStepIndex,
   } = useAppSelector((state) => state.app);
+  const currentUserId = currentUser?.id;
 
   const pendingLeaveActionRef = useRef<(() => void) | null>(null);
   const isSavingScoreRef = useRef(false);
+  const databaseReadyPromiseRef = useRef<Promise<void> | null>(null);
   const handleGameProgressChange = useCallback(
     (shouldWarn: boolean) => {
       dispatch(setShouldWarnBeforeLeavingGame(shouldWarn));
@@ -155,11 +158,61 @@ function App() {
 
   useMinimalSoundEffects(isSoundEnabled);
 
+  const ensureDatabaseReady = useCallback(() => {
+    if (!databaseReadyPromiseRef.current) {
+      databaseReadyPromiseRef.current = wakeDatabaseConnection().catch(
+        (error) => {
+          databaseReadyPromiseRef.current = null;
+          throw error;
+        }
+      );
+    }
+
+    return databaseReadyPromiseRef.current;
+  }, []);
+
+  const saveUser = useCallback(
+    (user: AuthUser) => {
+      dispatch(setCurrentUser(user));
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    },
+    [dispatch]
+  );
+
   useEffect(() => {
-    wakeDatabaseConnection().catch(() => {
+    ensureDatabaseReady().catch(() => {
       // Keep database warm-up invisible; user actions still use retry handling.
     });
-  }, []);
+  }, [ensureDatabaseReady]);
+
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    let isCancelled = false;
+    const userId = currentUserId;
+
+    async function refreshStoredUser() {
+      try {
+        await ensureDatabaseReady();
+
+        if (isCancelled) return;
+
+        const refreshedUser = await getUser(userId);
+
+        if (isCancelled) return;
+
+        saveUser(refreshedUser);
+      } catch {
+        // Keep a valid local session usable while the backend wakes or recovers.
+      }
+    }
+
+    refreshStoredUser();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentUserId, ensureDatabaseReady, saveUser]);
 
   useEffect(() => {
     const hasSeenTutorial =
@@ -176,13 +229,35 @@ function App() {
     const currentStep = tutorialSteps[tutorialStepIndex];
 
     if (!currentStep) return;
+    let isCancelled = false;
 
     if (location.pathname !== currentStep.route) {
       dispatch(setShouldWarnBeforeLeavingGame(false));
+
+      if (currentStep.route === "/game") {
+        ensureDatabaseReady()
+          .catch(() => {
+            // Game data requests still retry and show their own loading state.
+          })
+          .finally(() => {
+            if (isCancelled) return;
+            navigate(currentStep.route);
+          });
+
+        return () => {
+          isCancelled = true;
+        };
+      }
+
       navigate(currentStep.route);
     }
+
+    return () => {
+      isCancelled = true;
+    };
   }, [
     dispatch,
+    ensureDatabaseReady,
     isTutorialOpen,
     tutorialStepIndex,
     location.pathname,
@@ -275,11 +350,6 @@ function App() {
     });
   }
 
-  function saveUser(user: AuthUser) {
-    dispatch(setCurrentUser(user));
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-  }
-
   function handleLogout() {
     dispatch(setCurrentUser(null));
     dispatch(setProfileModalOpen(false));
@@ -352,7 +422,7 @@ function App() {
     }
   }
 
-  function goToTutorialStep(nextIndex: number) {
+  async function goToTutorialStep(nextIndex: number) {
     const safeNextIndex = Math.min(
       Math.max(nextIndex, 0),
       tutorialSteps.length - 1
@@ -364,6 +434,14 @@ function App() {
     dispatch(setShouldWarnBeforeLeavingGame(false));
 
     if (location.pathname !== nextStep.route) {
+      if (nextStep.route === "/game") {
+        try {
+          await ensureDatabaseReady();
+        } catch {
+          // Game data requests still retry and show their own loading state.
+        }
+      }
+
       navigate(nextStep.route);
     }
   }

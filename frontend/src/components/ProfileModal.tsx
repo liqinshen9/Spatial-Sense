@@ -5,7 +5,8 @@ import {
   updateUserAvatar,
   type ApiError,
 } from "../api/users";
-import { API_BASE_URL } from "../api/config";
+import AvatarImage from "./AvatarImage";
+import { getAvatarSrc } from "../utils/avatar";
 import { playWarningSound } from "../utils/soundEffects";
 
 type ProfileModalProps = {
@@ -14,16 +15,6 @@ type ProfileModalProps = {
   onUserUpdated: (user: AuthUser) => void;
   onAccountDeleted: () => void;
 };
-
-function getAvatarSrc(avatarUrl: string | null) {
-  if (!avatarUrl) return "";
-
-  if (avatarUrl.startsWith("http")) {
-    return avatarUrl;
-  }
-
-  return `${API_BASE_URL}${avatarUrl}`;
-}
 
 function ProfileModal({
   currentUser,
@@ -129,15 +120,19 @@ function ProfileModal({
         <div className="mt-7 h-px w-full bg-[var(--color-nav-border)]" />
 
         <div className="mt-6 flex flex-col items-center">
-          {currentAvatarSrc ? (
+          {avatarPreviewUrl ? (
             <img
               src={currentAvatarSrc}
               alt={`${currentUser.name}'s avatar`}
               className="h-24 w-24 rounded-full border-2 border-[var(--color-emphasis)] object-cover"
             />
           ) : (
-            <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-[var(--color-emphasis)] bg-[var(--color-leaderboard-row)] text-4xl font-black text-[var(--color-emphasis)]">
-              {currentUser.name.charAt(0).toUpperCase()}
+            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-[var(--color-emphasis)] bg-[var(--color-leaderboard-row)] text-4xl font-black text-[var(--color-emphasis)]">
+              <AvatarImage
+                avatarUrl={currentUser.avatarUrl}
+                name={currentUser.name}
+                className="h-full w-full object-cover"
+              />
             </div>
           )}
 

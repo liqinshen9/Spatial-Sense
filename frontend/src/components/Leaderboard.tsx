@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { API_BASE_URL } from "../api/config";
 import { getScoresByDifficulty } from "../api/scores";
 import type { Difficulty, ScoreRanking } from "../types/score";
 import type { AuthUser } from "../types/auth";
 import BlockLoading from "./BlockLoading";
+import AvatarImage from "./AvatarImage";
+import { getAvatarSrc } from "../utils/avatar";
 
 const playersPerPage = 5;
 
@@ -25,16 +26,6 @@ function normalizeDifficulty(value: string | null): Difficulty {
   }
 
   return "easy";
-}
-
-function getAvatarSrc(avatarUrl: string | null) {
-  if (!avatarUrl) return "";
-
-  if (avatarUrl.startsWith("http")) {
-    return avatarUrl;
-  }
-
-  return `${API_BASE_URL}${avatarUrl}`;
 }
 
 function preloadAvatarImages(rankings: ScoreRanking[]) {
@@ -242,10 +233,10 @@ function LeaderboardPage({
                 const isHighlighted =
                   isCurrentUser && player.id === highlightScoreId;
 
-                const avatarUrl = isCurrentUser && currentUser
-                  ? currentUser.avatarUrl
-                  : player.avatarUrl;
-                const avatarSrc = getAvatarSrc(avatarUrl);
+                const avatarUrl =
+                  isCurrentUser && currentUser?.avatarUrl
+                    ? currentUser.avatarUrl
+                    : player.avatarUrl;
 
                 return (
                   <div
@@ -282,17 +273,11 @@ function LeaderboardPage({
                             : `${player.username}'s avatar`
                         }
                       >
-                        {avatarSrc ? (
-                          <img
-                            src={avatarSrc}
-                            alt={`${player.username}'s avatar`}
-                            loading="eager"
-                            decoding="async"
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          player.username.charAt(0).toUpperCase()
-                        )}
+                        <AvatarImage
+                          avatarUrl={avatarUrl}
+                          name={player.username}
+                          className="h-full w-full object-cover"
+                        />
                       </button>
 
                       <p className="truncate text-base font-black text-[var(--color-text-primary)] sm:text-xl">

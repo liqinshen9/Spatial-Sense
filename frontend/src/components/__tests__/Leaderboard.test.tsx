@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, useLocation } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Leaderboard from "../Leaderboard";
 import { renderWithRouter } from "../../test/renderWithRouter";
 import { getScoresByDifficulty } from "../../api/scores";
@@ -52,6 +52,23 @@ const mockScores: ScoreRanking[] = [
 describe("Leaderboard", () => {
   beforeEach(() => {
     vi.mocked(getScoresByDifficulty).mockResolvedValue(mockScores);
+    vi.stubGlobal(
+      "Image",
+      class {
+        onload: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+
+        set src(_value: string) {
+          queueMicrotask(() => {
+            this.onload?.();
+          });
+        }
+      }
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("loads and displays leaderboard scores", async () => {
@@ -179,6 +196,33 @@ describe("Leaderboard", () => {
     expect(avatar).toHaveAttribute(
       "src",
       "http://localhost:5000/uploads/avatars/new.png"
+    );
+  });
+
+  it("falls back to the leaderboard avatar when the stored current user is stale", async () => {
+    vi.mocked(getScoresByDifficulty).mockResolvedValue([
+      {
+        ...mockScores[0],
+        avatarUrl: "/uploads/avatars/latest.png",
+      },
+    ]);
+
+    renderWithRouter(
+      <Leaderboard
+        currentUser={{
+          ...mockCurrentUser,
+          avatarUrl: null,
+        }}
+        onOpenProfileModal={vi.fn()}
+      />,
+      "/leaderboard?difficulty=easy"
+    );
+
+    const avatar = await screen.findByAltText("Li's avatar");
+
+    expect(avatar).toHaveAttribute(
+      "src",
+      "http://localhost:5000/uploads/avatars/latest.png"
     );
   });
 });

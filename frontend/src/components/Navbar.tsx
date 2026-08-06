@@ -1,6 +1,6 @@
 import { VolumeNotice, VolumeMute, SunOne, Moon } from "@icon-park/react";
 import { NavLink } from "react-router-dom";
-import { API_BASE_URL } from "../api/config";
+import AvatarImage from "./AvatarImage";
 import type { AuthUser } from "../types/auth";
 
 type NavbarProps = {
@@ -16,16 +16,6 @@ type NavbarProps = {
   onProfileClick: () => void;
   onStartTutorial: () => void;
 };
-
-function getAvatarSrc(avatarUrl: string | null) {
-  if (!avatarUrl) return "";
-
-  if (avatarUrl.startsWith("http")) {
-    return avatarUrl;
-  }
-
-  return `${API_BASE_URL}${avatarUrl}`;
-}
 
 function Navbar({
   isDarkMode,
@@ -49,8 +39,6 @@ function Navbar({
             : "hover:text-[var(--color-emphasis)]"
         }`;
   }
-
-  const avatarSrc = currentUser ? getAvatarSrc(currentUser.avatarUrl) : "";
 
   return (
     <nav className="relative z-10 flex h-14 w-full items-center gap-2 border-b border-[var(--color-nav-border)] bg-[var(--color-nav-bg)] px-2 backdrop-blur-md transition-colors duration-300 sm:justify-between sm:px-8 lg:px-12">
@@ -131,15 +119,11 @@ function Navbar({
             className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[var(--color-emphasis)] bg-[var(--color-leaderboard-row)] text-sm font-black text-[var(--color-emphasis)] transition hover:scale-105"
             aria-label="Open account settings"
           >
-            {avatarSrc ? (
-              <img
-                src={avatarSrc}
-                alt={`${currentUser.name}'s avatar`}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              currentUser.name.charAt(0).toUpperCase()
-            )}
+            <AvatarImage
+              avatarUrl={currentUser.avatarUrl}
+              name={currentUser.name}
+              className="h-full w-full object-cover"
+            />
           </button>
 
           <p className="hidden pr-4 text-sm font-bold text-[var(--color-text-primary)] sm:block">

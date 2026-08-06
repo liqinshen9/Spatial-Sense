@@ -42,6 +42,16 @@ async function createApiError(response: Response): Promise<ApiError> {
   return error;
 }
 
+export async function getUser(userId: number): Promise<AuthUser> {
+  const response = await fetchWithRetry(`${API_BASE_URL}/api/users/${userId}`);
+
+  if (!response.ok) {
+    throw await createApiError(response);
+  }
+
+  return response.json();
+}
+
 export async function updateUserAvatar(
   userId: number,
   avatar: File
