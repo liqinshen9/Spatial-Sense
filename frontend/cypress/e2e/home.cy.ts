@@ -25,6 +25,8 @@ describe("home and game navigation", () => {
     cy.wait("@getEasyPuzzle");
     cy.location("pathname").should("eq", "/game");
     cy.contains(/target/i).should("be.visible");
-    cy.contains("button", /rotate y/i).should("be.visible");
+    cy.contains("button", /^Y axis$/i).should("be.visible");
+    cy.get('button[aria-label="Rotate Y axis by 90 degrees"]')
+      .should("be.visible");
   });
 });

@@ -8,6 +8,16 @@ This file records prompts used during development. These prompts show how AI ass
 
 Please help design a clean and attractive light mode UI for the homepage of my 3D spatial reasoning game. The homepage should feel polished and inviting because it is the first page users see.
 
+Please try a #EAF4FF background with #1D4ED8 primary buttons and #FACC15 yellow highlights for the light mode homepage. Keep the same layout, but make the page feel brighter, cleaner, and easier to read.
+
+Please try a #FFF7E6 background with #FFFFFF cards, #2563EB buttons, and #F59E0B highlights for the light mode homepage. I want to see whether a warmer background looks more comfortable than a plain white background.
+
+Please try a #FEF9C3 background with #DBEAFE panels, #1E40AF primary text, and #EAB308 accent buttons for the light mode homepage. The dark theme already uses blue and yellow, so I want to see whether this can keep the same game identity in light mode.
+
+Please compare the #EAF4FF/#1D4ED8/#FACC15, #FFF7E6/#2563EB/#F59E0B, #FEF9C3/#DBEAFE/#1E40AF, and #FFFFFF/#002FA5/#00D4FF/#E9FBFF versions. Tell me which colour direction fits the 3D spatial reasoning game best.
+
+Please use a #FFFFFF background with #002FA5 primary text, #00D4FF highlights, #00AEE6 hover states, and #E9FBFF secondary surfaces for the light mode homepage.
+
 ### Improve the 3D block preview
 
 Please adjust the 3D block preview so that it is visually clear, centred, and consistent with the game theme.

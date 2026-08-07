@@ -13,7 +13,7 @@ describe("authentication modal", () => {
 
     cy.contains("label", /username/i).find("input").type("Li");
     cy.contains("label", /^email$/i).find("input").type("li@example.com");
-    cy.contains("label", /^password$/i).find("input").type("password123");
+    cy.get("#register-password").type("Password123!");
     cy.contains("label", /confirm password/i).find("input").type("different-password");
     cy.contains("button", /^create account$/i).click();
 

@@ -45,21 +45,21 @@ Overall, the unique part of Spatial Sense is that it combines the test, the inte
 
 ## Top 3 Advanced Features Implemented
 
-Top three advanced features to mark are:
+The top three advanced requirements to mark are:
 
-- [x] **Theme switching**
+1. [x] **Theme switching**
 
   The app supports light and dark mode. The selected theme is managed through the global app state and applied across the interface so the gamepage, navigation, leaderboard, modals, and tutorial remain visually consistent.
 
-- [x] **State management library**
+2. [x] **State management library**
 
   The frontend uses Redux Toolkit for application-wide state management. It manages shared state such as the selected difficulty, logged-in user, theme mode, sound setting, tutorial progress, modal visibility, pending scores, and warnings before leaving an active game. This keeps the app state consistent across the home page, game page, leaderboard, authentication modal, profile modal, and tutorial.
 
-- [x] **End-to-end testing using Cypress**
+3. [x] **End-to-end testing using Cypress**
 
   The project includes Cypress end-to-end tests for important user flows, including authentication, the home page, tutorial behaviour, and leaderboard behaviour. These tests help verify that the frontend works correctly from a user's perspective and that key interactions continue to work as the application changes.
 
-Other advanced features implemented:
+Additional robustness features implemented:
 
 4. **Security measures**
 
@@ -86,10 +86,10 @@ Other advanced features implemented:
 - [x] Built using C# with .NET 10.
 - [x] Uses Entity Framework Core.
 - [x] Uses SQL Server for data persistence.
-- [x] Implements CRUD operations for user accounts.
+- [x] User account CRUD is implemented through registration/create, profile read, avatar/profile update, and account deletion.
 - [x] Backend is deployed with the application.
 - [x] Unit tests cover key backend controllers and services.
-- [x] Scalar API documentation is exposed.
+- [x] Scalar API documentation is exposed at `/scalar/v1`.
 
 ### Project management
 
@@ -110,6 +110,32 @@ This project significantly exceeds the minimum requirements:
 - Backend: ASP.NET Core (.NET 10), Entity Framework Core, SQL Server, OpenAPI, Scalar API docs.
 - Deployment: Azure App Service for the deployed ASP.NET Core app, backend API, static frontend assets, and API documentation.
 - Testing: Vitest, Cypress, xUnit.
+
+## Planning, Design, and AI Evidence
+
+The `/specs` folder contains planning notes, design evidence, AI prompt logs, agent instructions, and context/config notes used during development. These files show evidence of planning, design decisions, and AI-assisted development throughout the project.
+
+## Testing Commands
+
+Frontend unit tests:
+
+```bash
+cd frontend
+npm run test:run
+```
+
+Frontend end-to-end tests (make sure the frontend and backend are running first):
+
+```bash
+cd frontend
+npm run e2e
+```
+
+Backend tests:
+
+```bash
+dotnet test backend.Tests/Backend.Tests.csproj
+```
 
 ## Running the Project
 
