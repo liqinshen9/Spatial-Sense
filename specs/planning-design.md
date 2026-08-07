@@ -10,9 +10,9 @@ At the beginning of the project, I planned to build a full-stack web application
 - Backend
 - Database
 
-The frontend was planned as the part users interact with directly. It needed to include the homepage, login interface, leaderboard, tutorial, and main game page.
+The frontend was planned as the part users interact with directly. It needed to include the homepage, gamepage, leaderboard page, tutorial animation, login/sign-up model, and game completion model. 
 
-The backend was planned to handle the main application logic, user accounts, authentication, score saving, and leaderboard data.
+The backend was planned to handle the game logic, user accounts, authentication, score saving, and leaderboard data.
 
 The database was planned to store user details, scores, difficulty levels, and leaderboard records so user progress and results could persist.
 
