@@ -46,3 +46,6 @@ backend/publish/
 backend/publish.zip
 
 backend/wwwroot/uploads/avatars/*
+
+# Documentation images
+docs/images/

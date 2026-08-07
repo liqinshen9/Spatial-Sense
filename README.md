@@ -47,15 +47,15 @@ Overall, the unique part of Spatial Sense is that it combines the test, the inte
 
 The top three advanced requirements to mark are:
 
-1. [x] **Theme switching**
+1. **[x] Theme switching**
 
   The app supports light and dark mode. The selected theme is managed through the global app state and applied across the interface so the gamepage, navigation, leaderboard, modals, and tutorial remain visually consistent.
 
-2. [x] **State management library**
+2. **[x] State management library**
 
   The frontend uses Redux Toolkit for application-wide state management. It manages shared state such as the selected difficulty, logged-in user, theme mode, sound setting, tutorial progress, modal visibility, pending scores, and warnings before leaving an active game. This keeps the app state consistent across the home page, game page, leaderboard, authentication modal, profile modal, and tutorial.
 
-3. [x] **End-to-end testing using Cypress**
+3. **[x] End-to-end testing using Cypress**
 
   The project includes Cypress end-to-end tests for important user flows, including authentication, the home page, tutorial behaviour, and leaderboard behaviour. These tests help verify that the frontend works correctly from a user's perspective and that key interactions continue to work as the application changes.
 
@@ -208,8 +208,8 @@ Make sure the backend is still running while using the frontend, because the fro
 
 ## Self Reflection
 
-If I were to do this project again, I would explore adding more transformation types, more varied shapes, and more puzzle mechanics. I did not implement too many extra transformations in this version because I wanted to avoid increasing the user's cognitive load and keep the interface clear and easy to understand.
+If I were to do this project again, I would explore adding more transformation types (such as scaling, translating or even shearing), more varied shapes, and more puzzle mechanics. I did not implement too many extra transformations in this version because I wanted to avoid increasing the user's cognitive load and keep the interface clear and easy to understand.
 
 I would also improve the procedural puzzle generation system. The current backend does filter out some weak puzzles, such as targets that are already solved, targets where important coloured cubes are hidden, and Medium/Difficult puzzles that can be solved with only simple 90-degree rotations. However, it does not fully prevent every possible symmetrical or ambiguous shape. With more time, I would add stronger symmetry detection so generated puzzles are more consistently fair and challenging.
 
-With more time, I would also design the interface more carefully in Figma before development. This would help me test different layouts, improve the visual hierarchy, and make the gameplay experience even more polished and intuitive.
+With more time, I would also design the light mode interface more carefully in Figma before development. This would help me test different layouts, improve the visual hierarchy, and make the gameplay experience even more polished and intuitive.
