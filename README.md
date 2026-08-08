@@ -208,6 +208,8 @@ Make sure the backend is still running while using the frontend, because the fro
 
 ## Self Reflection
 
+> **Important limitation:** Because the database is hosted on a free tier, it can take time to wake up after being inactive. This means the tutorial mode may sometimes have display issues on both mobile and desktop, especially when it moves to the game page before the puzzle block has fully loaded. I tried to reduce this by adding a frontend retry handling, loading states, and tutorial checks that wait for the game block before highlighting it. These changes make the problem less likely, but they cannot fully prevent delays when the hosting service pauses the database. Next time, I would use a paid tier or non-pausing database option so the app is always ready. I would recommend to test the tutorial animation last if it is not working for the first time.
+
 If I were to do this project again, I would explore adding more transformation types (such as scaling, translating or even shearing), more varied shapes, and more puzzle mechanics. I did not implement too many extra transformations in this version because I wanted to avoid increasing the user's cognitive load and keep the interface clear and easy to understand.
 
 I would also improve the procedural puzzle generation system. The current backend does filter out some weak puzzles, such as targets that are already solved, targets where important coloured cubes are hidden, and Medium/Difficult puzzles that can be solved with only simple 90-degree rotations. However, it does not fully prevent every possible symmetrical or ambiguous shape. With more time, I would add stronger symmetry detection so generated puzzles are more consistently fair and challenging.
