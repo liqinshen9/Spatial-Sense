@@ -1,5 +1,7 @@
 using Backend.Controllers;
+using Backend.Data;
 using Backend.Models;
+using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +13,7 @@ public class ScoresControllerTests
     public async Task CreateScore_RejectsInvalidPayloads()
     {
         await using var context = TestDbContextFactory.Create();
-        var controller = new ScoresController(context);
+        var controller = CreateController(context);
 
         var missingUserResult = await controller.CreateScore(
             new CreateScoreRequest(0, "Easy", 1000)
@@ -29,7 +31,7 @@ public class ScoresControllerTests
     public async Task CreateScore_ReturnsNotFoundWhenUserDoesNotExist()
     {
         await using var context = TestDbContextFactory.Create();
-        var controller = new ScoresController(context);
+        var controller = CreateController(context);
 
         var result = await controller.CreateScore(
             new CreateScoreRequest(999, "Easy", 1000)
@@ -43,7 +45,7 @@ public class ScoresControllerTests
     {
         await using var context = TestDbContextFactory.Create();
         var user = await AddUser(context, "Alex", "alex@example.com");
-        var controller = new ScoresController(context);
+        var controller = CreateController(context);
 
         var result = await controller.CreateScore(
             new CreateScoreRequest(user.Id, " difficult ", 65432)
@@ -63,7 +65,7 @@ public class ScoresControllerTests
     {
         await using var context = TestDbContextFactory.Create();
         var user = await AddUser(context, "Taylor", "taylor@example.com");
-        var controller = new ScoresController(context);
+        var controller = CreateController(context);
 
         await controller.CreateScore(new CreateScoreRequest(user.Id, "Easy", 5000));
         await controller.CreateScore(new CreateScoreRequest(user.Id, "Easy", 7000));
@@ -99,7 +101,7 @@ public class ScoresControllerTests
         );
         await context.SaveChangesAsync();
 
-        var controller = new ScoresController(context);
+        var controller = CreateController(context);
 
         var result = await controller.CreateScore(
             new CreateScoreRequest(user.Id, "Medium", 6000)
@@ -146,7 +148,7 @@ public class ScoresControllerTests
         );
         await context.SaveChangesAsync();
 
-        var controller = new ScoresController(context);
+        var controller = CreateController(context);
 
         var result = await controller.GetScores("easy");
 
@@ -177,7 +179,7 @@ public class ScoresControllerTests
         context.Scores.Add(entry);
         await context.SaveChangesAsync();
 
-        var controller = new ScoresController(context);
+        var controller = CreateController(context);
 
         var result = await controller.GetScore(entry.Id);
 
@@ -189,7 +191,7 @@ public class ScoresControllerTests
     }
 
     private static async Task<User> AddUser(
-        Backend.Data.AppDbContext context,
+        AppDbContext context,
         string name,
         string email
     )
@@ -206,5 +208,21 @@ public class ScoresControllerTests
         await context.SaveChangesAsync();
 
         return user;
+    }
+
+    private static ScoresController CreateController(AppDbContext context)
+    {
+        var webRootPath = Path.Combine(
+            Path.GetTempPath(),
+            $"scores-controller-tests-{Guid.NewGuid():N}"
+        );
+
+        Directory.CreateDirectory(webRootPath);
+
+        var avatarStorageService = new AvatarStorageService(
+            new TestWebHostEnvironment(webRootPath)
+        );
+
+        return new ScoresController(context, avatarStorageService);
     }
 }
