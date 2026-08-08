@@ -1,12 +1,10 @@
 import type { CreateScorePayload, Difficulty, ScoreRanking } from "../types/score";
-import { API_BASE_URL, fetchWithRetry } from "./config";
+import { apiUrl, fetchWithRetry, wakeDatabaseConnection } from "./config";
 
 export async function getScoresByDifficulty(
   difficulty: Difficulty
 ): Promise<ScoreRanking[]> {
-  const response = await fetchWithRetry(
-    `${API_BASE_URL}/api/scores?difficulty=${difficulty}`
-  );
+  const response = await fetchWithRetry(apiUrl(`/api/scores?difficulty=${difficulty}`));
 
   if (!response.ok) {
     throw new Error("Failed to fetch leaderboard.");
@@ -18,7 +16,9 @@ export async function getScoresByDifficulty(
 export async function createScore(
   payload: CreateScorePayload
 ): Promise<ScoreRanking> {
-  const response = await fetchWithRetry(`${API_BASE_URL}/api/scores`, {
+  await wakeDatabaseConnection();
+
+  const response = await fetchWithRetry(apiUrl("/api/scores"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -100,13 +100,13 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
-    private static UserProfileResponse ToUserProfileResponse(User user)
+    private UserProfileResponse ToUserProfileResponse(User user)
     {
         return new UserProfileResponse(
             user.Id,
             user.Name,
             user.Email,
-            user.AvatarUrl,
+            _avatarStorageService.GetAvailableAvatarUrl(user.AvatarUrl),
             user.CreatedAt
         );
     }

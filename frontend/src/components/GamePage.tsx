@@ -719,6 +719,7 @@ const displayedPuzzlePenaltyMilliseconds =
 
             <div
               data-tutorial="target-block"
+              data-tutorial-ready={!isLoadingPuzzle && puzzle ? "true" : "false"}
               className="mt-3 flex aspect-square w-full items-center justify-center rounded-[22px] border border-[var(--color-nav-border)] bg-[var(--color-leaderboard-card)] lg:mt-4 lg:w-[240px] lg:rounded-[28px]"
             >
               {!isLoadingPuzzle && puzzleError && (
@@ -765,6 +766,7 @@ const displayedPuzzlePenaltyMilliseconds =
           <div className="relative mx-auto w-full max-w-[330px] lg:w-[min(36vw,430px)] lg:max-w-none">
             <div
               data-tutorial="player-block"
+              data-tutorial-ready={!isLoadingPuzzle && puzzle ? "true" : "false"}
               className={`relative flex aspect-square w-full items-center justify-center rounded-[28px] border transition-colors duration-200 lg:rounded-[32px] ${
                 isSolved
                   ? "border-4 border-[var(--color-success-border)] bg-[var(--color-success-bg)] ring-4 ring-[var(--color-success-ring)]"

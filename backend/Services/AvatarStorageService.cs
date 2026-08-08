@@ -83,6 +83,25 @@ public class AvatarStorageService
         }
     }
 
+    public string? GetAvailableAvatarUrl(string? avatarUrl)
+    {
+        if (string.IsNullOrWhiteSpace(avatarUrl))
+        {
+            return null;
+        }
+
+        if (!avatarUrl.StartsWith("/uploads/avatars/", StringComparison.OrdinalIgnoreCase))
+        {
+            return avatarUrl;
+        }
+
+        var uploadFolder = GetUploadFolderPath();
+        var fileName = Path.GetFileName(avatarUrl);
+        var filePath = Path.Combine(uploadFolder, fileName);
+
+        return File.Exists(filePath) ? avatarUrl : null;
+    }
+
     public string GetUploadFolderPath()
     {
         var azureHomePath = Environment.GetEnvironmentVariable("HOME");

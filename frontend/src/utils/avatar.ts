@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../api/config";
+import { apiUrl } from "../api/config";
 
 export function getAvatarSrc(avatarUrl: string | null) {
   if (!avatarUrl) return "";
@@ -7,5 +7,5 @@ export function getAvatarSrc(avatarUrl: string | null) {
     return avatarUrl;
   }
 
-  return `${API_BASE_URL}${avatarUrl}`;
+  return apiUrl(avatarUrl);
 }

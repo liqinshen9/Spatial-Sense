@@ -135,13 +135,13 @@ public class AuthController : ControllerBase
         return Created($"/api/users/{user.Id}", ToAuthUserResponse(user));
     }
 
-    private static AuthUserResponse ToAuthUserResponse(User user)
+    private AuthUserResponse ToAuthUserResponse(User user)
     {
         return new AuthUserResponse(
             user.Id,
             user.Name,
             user.Email,
-            user.AvatarUrl,
+            _avatarStorageService.GetAvailableAvatarUrl(user.AvatarUrl),
             user.CreatedAt
         );
     }

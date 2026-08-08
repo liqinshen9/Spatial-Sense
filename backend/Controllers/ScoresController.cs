@@ -1,5 +1,6 @@
 using Backend.Data;
 using Backend.Models;
+using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +12,12 @@ namespace Backend.Controllers;
 public class ScoresController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly AvatarStorageService _avatarStorageService;
 
-    public ScoresController(AppDbContext context)
+    public ScoresController(AppDbContext context, AvatarStorageService avatarStorageService)
     {
         _context = context;
+        _avatarStorageService = avatarStorageService;
     }
 
     [HttpGet]
@@ -167,7 +170,7 @@ public class ScoresController : ControllerBase
                 index + 1,
                 score.UserId,
                 score.Username,
-                score.AvatarUrl,
+                _avatarStorageService.GetAvailableAvatarUrl(score.AvatarUrl),
                 score.Difficulty,
                 score.ElapsedMilliseconds,
                 FormatTime(score.ElapsedMilliseconds),

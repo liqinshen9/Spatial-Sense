@@ -24,6 +24,12 @@ type CenteredCube = {
   colorIndex: number;
 };
 
+type CubeColors = {
+  blue: string;
+  yellow: string;
+  edge: string;
+};
+
 function getCssVariableValue(variableName: string) {
   if (typeof window === "undefined") return "";
   return getComputedStyle(document.documentElement)
@@ -33,12 +39,6 @@ function getCssVariableValue(variableName: string) {
 
 const boxGeometry = new BoxGeometry(1, 1, 1);
 const edgeGeometry = new EdgesGeometry(boxGeometry);
-
-const cubeColors = {
-  blue: getCssVariableValue("--color-3d-cube-main"),
-  yellow: getCssVariableValue("--color-3d-cube-accent"),
-  edge: getCssVariableValue("--color-3d-edge"),
-};
 
 function getCenteredCubes(cubes: CubeDto[]): CenteredCube[] {
   if (cubes.length === 0) return [];
@@ -72,9 +72,9 @@ function orientationToQuaternion(orientation?: BlockOrientation) {
   ).normalize();
 }
 
-function Cube({ cube }: { cube: CenteredCube }) {
+function Cube({ cube, colors }: { cube: CenteredCube; colors: CubeColors }) {
   const cubeColor =
-    cube.colorIndex === 1 ? cubeColors.yellow : cubeColors.blue;
+    cube.colorIndex === 1 ? colors.yellow : colors.blue;
 
   return (
     <group position={[cube.x, cube.y, cube.z]}>
@@ -90,7 +90,7 @@ function Cube({ cube }: { cube: CenteredCube }) {
 
       <lineSegments geometry={edgeGeometry} scale={1.004} renderOrder={2}>
         <lineBasicMaterial
-          color={cubeColors.edge}
+          color={colors.edge}
           transparent={false}
           opacity={1}
           depthTest={true}
@@ -101,7 +101,7 @@ function Cube({ cube }: { cube: CenteredCube }) {
 
       <lineSegments geometry={edgeGeometry} scale={1.01} renderOrder={3}>
         <lineBasicMaterial
-          color={cubeColors.edge}
+          color={colors.edge}
           transparent={false}
           opacity={1}
           depthTest={true}
@@ -117,10 +117,12 @@ function BlockModel({
   cubes,
   orientation,
   size,
+  colors,
 }: {
   cubes: CubeDto[];
   orientation?: BlockOrientation;
   size: "target" | "main";
+  colors: CubeColors;
 }) {
   const groupRef = useRef<Group>(null);
   const centeredCubes = useMemo(() => getCenteredCubes(cubes), [cubes]);
@@ -140,7 +142,7 @@ function BlockModel({
   return (
     <group ref={groupRef} scale={[fixedScale, fixedScale, fixedScale]}>
       {centeredCubes.map((cube, index) => (
-        <Cube key={index} cube={cube} />
+        <Cube key={index} cube={cube} colors={colors} />
       ))}
     </group>
   );
@@ -151,6 +153,15 @@ function PuzzleBlockCanvas({
   orientation,
   size = "main",
 }: PuzzleBlockCanvasProps) {
+  const colors = useMemo(
+    () => ({
+      blue: getCssVariableValue("--color-3d-cube-main") || "#0f358f",
+      yellow: getCssVariableValue("--color-3d-cube-accent") || "#fffb1b",
+      edge: getCssVariableValue("--color-3d-edge") || "#ffffff",
+    }),
+    []
+  );
+
   return (
     <Canvas
       camera={{
@@ -168,7 +179,12 @@ function PuzzleBlockCanvas({
       <directionalLight position={[5, 8, 6]} intensity={2.1} />
       <directionalLight position={[-4, 3, 5]} intensity={0.7} />
 
-      <BlockModel cubes={cubes} orientation={orientation} size={size} />
+      <BlockModel
+        cubes={cubes}
+        orientation={orientation}
+        size={size}
+        colors={colors}
+      />
     </Canvas>
   );
 }

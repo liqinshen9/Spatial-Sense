@@ -1,6 +1,16 @@
-export const API_BASE_URL = import.meta.env.DEV ? "http://localhost:5000" : "";
+const DEFAULT_API_BASE_URL = "http://localhost:5000";
+const apiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL?.trim() ||
+  (import.meta.env.DEV ? DEFAULT_API_BASE_URL : "");
+
+export const API_BASE_URL = apiBaseUrl.replace(/\/+$/, "");
 
 const retryDelays = [1000, 2000, 4000, 6000, 8000, 10000, 12000, 15000];
+
+type FetchRetryOptions = {
+  retryResponses?: boolean;
+  retryNetworkErrors?: boolean;
+};
 
 function delay(milliseconds: number) {
   return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
@@ -16,15 +26,22 @@ function shouldRetryResponse(response: Response) {
 
 export async function fetchWithRetry(
   input: RequestInfo | URL,
-  init?: RequestInit
+  init?: RequestInit,
+  options: FetchRetryOptions = {}
 ) {
+  const retryResponses = options.retryResponses ?? isReadRequest(init);
+  const retryNetworkErrors = options.retryNetworkErrors ?? isReadRequest(init);
   let lastError: unknown = null;
 
   for (let attempt = 0; attempt <= retryDelays.length; attempt++) {
     try {
       const response = await fetch(input, init);
 
-      if (!shouldRetryResponse(response) || attempt === retryDelays.length) {
+      if (
+        !retryResponses ||
+        !shouldRetryResponse(response) ||
+        attempt === retryDelays.length
+      ) {
         return response;
       }
 
@@ -32,7 +49,7 @@ export async function fetchWithRetry(
     } catch (error) {
       lastError = error;
 
-      if (attempt === retryDelays.length) {
+      if (!retryNetworkErrors || attempt === retryDelays.length) {
         break;
       }
     }
@@ -40,13 +57,34 @@ export async function fetchWithRetry(
     await delay(retryDelays[attempt]);
   }
 
-  throw lastError instanceof Error
-    ? lastError
-    : new Error("Request failed.");
+  throw createRetryError(lastError);
+}
+
+export function apiUrl(path: string) {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+
+  return `${API_BASE_URL}${normalizedPath}`;
+}
+
+function isReadRequest(init?: RequestInit) {
+  const method = init?.method?.toUpperCase() ?? "GET";
+
+  return method === "GET" || method === "HEAD";
+}
+
+function createRetryError(error: unknown) {
+  if (
+    error instanceof TypeError &&
+    error.message.toLowerCase().includes("fetch")
+  ) {
+    return new Error("The server is still waking up. Please try again shortly.");
+  }
+
+  return error instanceof Error ? error : new Error("Request failed.");
 }
 
 export async function wakeDatabaseConnection() {
-  const response = await fetchWithRetry(`${API_BASE_URL}/api/database/wake`);
+  const response = await fetchWithRetry(apiUrl("/api/database/wake"));
 
   if (!response.ok) {
     throw new Error("Failed to wake database.");

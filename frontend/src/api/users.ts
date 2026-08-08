@@ -1,5 +1,5 @@
 import type { AuthUser } from "../types/auth";
-import { API_BASE_URL, fetchWithRetry } from "./config";
+import { apiUrl, fetchWithRetry, wakeDatabaseConnection } from "./config";
 
 export type ApiError = Error & {
   status?: number;
@@ -43,7 +43,7 @@ async function createApiError(response: Response): Promise<ApiError> {
 }
 
 export async function getUser(userId: number): Promise<AuthUser> {
-  const response = await fetchWithRetry(`${API_BASE_URL}/api/users/${userId}`);
+  const response = await fetchWithRetry(apiUrl(`/api/users/${userId}`));
 
   if (!response.ok) {
     throw await createApiError(response);
@@ -56,16 +56,15 @@ export async function updateUserAvatar(
   userId: number,
   avatar: File
 ): Promise<AuthUser> {
+  await wakeDatabaseConnection();
+
   const formData = new FormData();
   formData.append("avatar", avatar);
 
-  const response = await fetchWithRetry(
-    `${API_BASE_URL}/api/users/${userId}/avatar`,
-    {
-      method: "PUT",
-      body: formData,
-    }
-  );
+  const response = await fetchWithRetry(apiUrl(`/api/users/${userId}/avatar`), {
+    method: "PUT",
+    body: formData,
+  });
 
   if (!response.ok) {
     throw await createApiError(response);
@@ -75,7 +74,9 @@ export async function updateUserAvatar(
 }
 
 export async function deleteUserAccount(userId: number): Promise<void> {
-  const response = await fetchWithRetry(`${API_BASE_URL}/api/users/${userId}`, {
+  await wakeDatabaseConnection();
+
+  const response = await fetchWithRetry(apiUrl(`/api/users/${userId}`), {
     method: "DELETE",
   });
 

@@ -7,18 +7,20 @@ type AvatarImageProps = {
   className?: string;
 };
 
-const avatarRetryDelays = [1000, 2000, 4000, 6000, 8000];
+const avatarRetryDelays = [1000, 2000, 4000];
 
 function AvatarImage({ avatarUrl, name, className = "" }: AvatarImageProps) {
   const baseAvatarSrc = getAvatarSrc(avatarUrl);
   const [retryIndex, setRetryIndex] = useState(0);
   const [loadedAvatarSrc, setLoadedAvatarSrc] = useState("");
   const [isWaitingToRetry, setIsWaitingToRetry] = useState(false);
+  const [hasFailed, setHasFailed] = useState(false);
 
   useEffect(() => {
     setRetryIndex(0);
     setLoadedAvatarSrc("");
     setIsWaitingToRetry(false);
+    setHasFailed(false);
   }, [baseAvatarSrc]);
 
   useEffect(() => {
@@ -46,6 +48,7 @@ function AvatarImage({ avatarUrl, name, className = "" }: AvatarImageProps) {
 
       if (retryIndex >= avatarRetryDelays.length) {
         setIsWaitingToRetry(false);
+        setHasFailed(true);
         return;
       }
 
@@ -72,7 +75,7 @@ function AvatarImage({ avatarUrl, name, className = "" }: AvatarImageProps) {
     return () => window.clearTimeout(timeout);
   }, [isWaitingToRetry, retryIndex]);
 
-  if (!baseAvatarSrc) {
+  if (!baseAvatarSrc || hasFailed) {
     return <>{name.charAt(0).toUpperCase()}</>;
   }
 

@@ -501,10 +501,13 @@ function TutorialOverlay({
 
         const rect = element.getBoundingClientRect();
         const style = window.getComputedStyle(element);
+        const isWaitingForContent =
+          element.getAttribute("data-tutorial-ready") === "false";
 
         return (
           rect.width > 0 &&
           rect.height > 0 &&
+          !isWaitingForContent &&
           style.display !== "none" &&
           style.visibility !== "hidden" &&
           style.opacity !== "0"
