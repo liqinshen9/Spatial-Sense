@@ -28,6 +28,8 @@ Please improve the mobile version of the game page so that the controls remain u
 
 ### Improve the leaderboard
 
+for the leaderboard, I get a fail to fetch issue, i'm not sure why. backend has been connected
+
 Please improve the leaderboard layout by adding pagination, and avoiding unnecessary scrolling.
 
 ### Check signed-in navbar layout
