@@ -47,15 +47,15 @@ Overall, the unique part of Spatial Sense is that it combines the test, the inte
 
 The top three advanced requirements to mark are:
 
-1. **[x] Theme switching**
+1. **Theme switching**
 
   The app supports light and dark mode. The selected theme is managed through the global app state and applied across the interface so the gamepage, navigation, leaderboard, modals, and tutorial remain visually consistent.
 
-2. **[x] State management library**
+2. **State management library**
 
   The frontend uses Redux Toolkit for application-wide state management. It manages shared state such as the selected difficulty, logged-in user, theme mode, sound setting, tutorial progress, modal visibility, pending scores, and warnings before leaving an active game. This keeps the app state consistent across the home page, game page, leaderboard, authentication modal, profile modal, and tutorial.
 
-3. **[x] End-to-end testing using Cypress**
+3. **End-to-end testing using Cypress**
 
   The project includes Cypress end-to-end tests for important user flows, including authentication, the home page, tutorial behaviour, and leaderboard behaviour. These tests help verify that the frontend works correctly from a user's perspective and that key interactions continue to work as the application changes.
 
