@@ -143,7 +143,7 @@ dotnet test backend.Tests/Backend.Tests.csproj
 
 ```bash
 git clone https://github.com/liqinshen9/Spatial-Sense.git
-cd spatial-reasoning-test
+cd spatial-sense
 ```
 
 ### 2. Set up the backend database
